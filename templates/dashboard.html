@@ -201,6 +201,27 @@
       align-self: flex-start;
     }
 
+    .danger-form {
+      margin: 0;
+      align-self: flex-start;
+    }
+
+    .danger-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0.65rem 1rem;
+      border: 0;
+      border-radius: 6px;
+      background: #b42318;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
     .actions .hint {
       margin: 12px 0 14px;
       color: var(--muted);
@@ -681,6 +702,10 @@
           </details>
 
           <button type="button" class="csv-toggle" id="csv-help-toggle">CSV Upload</button>
+          <form action="{{ url_for('delete_all_records') }}" method="post" class="danger-form"
+            onsubmit="return confirm('This will permanently delete all records and payment screenshots. Continue?');">
+            <button type="submit" class="danger-button">Delete All Records</button>
+          </form>
         </div>
 
         <div id="csv-help" class="csv-help">
