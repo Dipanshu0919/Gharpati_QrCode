@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="mr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Admin payment reports displaying unpaid, paid and approved user bills.">
+  <title>Payment Reports - Admin Dashboard</title>
+  <style>
+    :root {
+      --border: #b7bcc7;
+      --field-bg: #ffffff;
+      --text: #1d2433;
+      --muted: #5f697a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .page {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      background: #fff;
+    }
+
+    /* ── Sidebar (identical to dashboard) ── */
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      width: 50px;
+      min-width: 50px;
+      padding: 16px 6px;
+      border-right: 1px solid #dfe4ec;
+      background: #f7f9fc;
+      transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease;
+      overflow: hidden;
+      flex-shrink: 0;
+      z-index: 110;
+    }
+
+    .sidebar:hover {
+      width: 140px;
+      min-width: 140px;
+      padding: 16px 12px;
+    }
+
+    .sidebar .nav-text { display: none; }
+    .sidebar:hover .nav-text { display: inline; }
+
+    .sidebar .nav-item { justify-content: center; padding: 10px 0; }
+    .sidebar:hover .nav-item { justify-content: flex-start; padding: 10px 12px; }
+
+    .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar nav { display: flex; flex-direction: column; gap: 8px; }
+
+    .nav-item {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: transparent;
+      color: #1d2433;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      border: 1px solid transparent;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: #1f4b99;
+      color: #fff;
+      border-color: #1f4b99;
+    }
+
+    /* ── Main ── */
+    .main-content { flex: 1; padding: 0; min-width: 0; }
+
+    .header {
+      padding: 14px 18px 8px;
+      border-bottom: 1px solid #eceff4;
+    }
+
+    .header h1 { margin: 0; font-size: 28px; line-height: 1.1; color: #14213d; }
+
+    .meta { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+
+    .content { padding: 14px 18px 20px; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      border-bottom: 2px solid #edf2f7;
+      padding-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border: 1px solid #dfe4ec;
+      background: #f8fbff;
+      color: #5f697a;
+      font-weight: 700;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      background: #eef3fb;
+      color: #1d2433;
+    }
+
+    .tab-btn.active {
+      background: #1f4b99;
+      color: #fff;
+      border-color: #1f4b99;
+    }
+
+    .badge {
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(255,255,255,0.25);
+    }
+
+    .tab-btn:not(.active) .badge {
+      background: #cbd5e1;
+      color: #334155;
+    }
+
+    /* ── Tab panel animation ── */
+    .tab-content { display: none; }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.22s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Search ── */
+    .search-row { margin-bottom: 14px; }
+
+    .search-input {
+      width: 100%;
+      max-width: 300px;
+      height: 34px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--field-bg);
+      color: var(--text);
+      font-size: 15px;
+      text-align: left;
+    }
+
+    /* ── Table — page scrolls horizontally (same as dashboard) ── */
+    .table-wrap {
+      border: 1px solid #dfe4ec;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 80%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #d6dbe3;
+      padding: 10px 12px;
+      font-size: 15px;
+      vertical-align: middle;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #2f5f9a;
+      color: #fff;
+      text-align: center;
+      font-weight: 700;
+      z-index: 10;
+    }
+
+    td { background: #fff; text-align: center; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 0.5rem 0.9rem;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .btn-blue    { background: #1f4b99; }
+    .btn-green   { background: #059669; }
+    .btn-dark    { background: #0f172a; }
+    .btn-sky     { background: #0284c7; }
+
+    .actions-cell {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .approved-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .empty {
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 15px;
+      text-align: center;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px dashed #cbd5e1;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav>
+        <a href="{{ url_for('dashboard') }}" class="nav-item">
+          <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </span>
+          <span class="nav-text" style="margin-left: 8px;">User</span>
+        </a>
+        <a href="{{ url_for('reports') }}" class="nav-item active">
+          <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="20" x2="12" y2="10"></line>
+              <line x1="18" y1="20" x2="18" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="16"></line>
+            </svg>
+          </span>
+          <span class="nav-text" style="margin-left: 8px;">Reports</span>
+        </a>
+        <a href="{{ url_for('generateqr') }}" class="nav-item">
+          <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="5" height="5" x="3" y="3" rx="1"></rect>
+              <rect width="5" height="5" x="16" y="3" rx="1"></rect>
+              <rect width="5" height="5" x="3" y="16" rx="1"></rect>
+              <path d="M21 16h-3v3h3z"></path>
+              <path d="M16 21h-3v-3h3z"></path>
+              <path d="M21 21v.01"></path>
+              <path d="M12 3h.01"></path>
+              <path d="M12 8h.01"></path>
+              <path d="M8 12h.01"></path>
+              <path d="M3 12h.01"></path>
+              <path d="M12 16h.01"></path>
+              <path d="M12 21h.01"></path>
+            </svg>
+          </span>
+          <span class="nav-text" style="margin-left: 8px;">QR generate</span>
+        </a>
+        <a href="{{ url_for('admin_page') }}" class="nav-item">
+          <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M6 20v-1a6 6 0 0 1 12 0v1"></path>
+            </svg>
+          </span>
+          <span class="nav-text" style="margin-left: 8px;">Admin</span>
+        </a>
+        <a href="{{ url_for('logout') }}" class="nav-item" style="margin-top: auto; color: #b42318;"
+          onclick="return confirm('Logout from admin panel?');">
+          <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </span>
+          <span class="nav-text" style="margin-left: 8px;">Logout</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <h1>Payment Reports</h1>
+        <p class="meta">Track bills by status — Unpaid, Paid (awaiting approval), and Approved.</p>
+      </div>
+
+      <div class="content">
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <button type="button" class="tab-btn active" id="btn-unpaid" onclick="switchTab('unpaid')">
+            Unpaid <span class="badge">{{ unpaid_users|length }}</span>
+          </button>
+          <button type="button" class="tab-btn" id="btn-paid" onclick="switchTab('paid')">
+            Paid <span class="badge">{{ paid_users|length }}</span>
+          </button>
+          <button type="button" class="tab-btn" id="btn-approved" onclick="switchTab('approved')">
+            Approved <span class="badge">{{ approved_users|length }}</span>
+          </button>
+        </div>
+
+        <!-- Search -->
+        <div class="search-row">
+          <input type="text" id="report-search" class="search-input" placeholder="Search records...">
+        </div>
+
+        <!-- ══ UNPAID TAB ══ -->
+        <div id="tab-unpaid" class="tab-content active">
+          {% if not unpaid_users %}
+          <div class="empty">No unpaid bills — all users have submitted payment!</div>
+          {% else %}
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 40px; padding-left: 4px; padding-right: 4px;">Sr.</th>
+                  {% for dbname, marathi in fields.items() %}
+                  <th>{{ marathi }}</th>
+                  {% endfor %}
+                  <th style="width: 100px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in unpaid_users %}
+                <tr class="report-row">
+                  <td style="padding-left: 4px; padding-right: 4px;">{{ user.sr_no or '-' }}</td>
+                  {% for dbname, marathi in fields.items() %}
+                  <td>{{ user[dbname] or '-' }}</td>
+                  {% endfor %}
+                  <td>
+                    <div class="actions-cell">
+                      <a href="{{ url_for('view_user', sr_no=user.sr_no) }}" target="_blank" class="btn btn-blue">View User</a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- ══ PAID (awaiting approval) TAB ══ -->
+        <div id="tab-paid" class="tab-content">
+          {% if not paid_users %}
+          <div class="empty">No payments awaiting approval.</div>
+          {% else %}
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 40px; padding-left: 4px; padding-right: 4px;">Sr.</th>
+                  {% for dbname, marathi in fields.items() %}
+                  <th>{{ marathi }}</th>
+                  {% endfor %}
+                  <th style="width: 180px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in paid_users %}
+                <tr class="report-row">
+                  <td style="padding-left: 4px; padding-right: 4px;">{{ user.sr_no or '-' }}</td>
+                  {% for dbname, marathi in fields.items() %}
+                  <td>{{ user[dbname] or '-' }}</td>
+                  {% endfor %}
+                  <td>
+                    <div class="actions-cell">
+                      <a href="{{ url_for('view_user', sr_no=user.sr_no) }}" target="_blank" class="btn btn-blue">View User</a>
+                      <a href="{{ url_for('view_photo', sr_no=user.sr_no) }}" target="_blank" class="btn btn-dark">View SS</a>
+                      <a href="{{ url_for('approve_payment', sr_no=user.sr_no) }}" class="btn btn-green"
+                        onclick="return confirm('Approve this payment? The user will move to the Approved table.');">Approve</a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- ══ APPROVED TAB ══ -->
+        <div id="tab-approved" class="tab-content">
+          {% if not approved_users %}
+          <div class="empty">No approved payments yet.</div>
+          {% else %}
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 40px; padding-left: 4px; padding-right: 4px;">Sr.</th>
+                  {% for dbname, marathi in fields.items() %}
+                  <th>{{ marathi }}</th>
+                  {% endfor %}
+                  <th style="width: 80px;">Status</th>
+                  <th style="width: 180px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in approved_users %}
+                <tr class="report-row">
+                  <td style="padding-left: 4px; padding-right: 4px;">{{ user.sr_no or '-' }}</td>
+                  {% for dbname, marathi in fields.items() %}
+                  <td>{{ user[dbname] or '-' }}</td>
+                  {% endfor %}
+                  <td>
+                    <span class="approved-badge">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                      Approved
+                    </span>
+                  </td>
+                  <td>
+                    <div class="actions-cell">
+                      <a href="{{ url_for('view_user', sr_no=user.sr_no) }}" target="_blank" class="btn btn-blue">View User</a>
+                      <a href="{{ url_for('receipt', sr_no=user.sr_no) }}" target="_blank" class="btn btn-sky">Receipt</a>
+                      {% if user.payment_ss %}
+                      <a href="{{ url_for('view_photo', sr_no=user.sr_no) }}" target="_blank" class="btn btn-dark">SS</a>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tabs = ['unpaid', 'paid', 'approved'];
+
+    function switchTab(name) {
+      tabs.forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('active', t === name);
+        document.getElementById('btn-' + t).classList.toggle('active', t === name);
+      });
+      // Reset search
+      const s = document.getElementById('report-search');
+      if (s) { s.value = ''; filterRows(''); }
+    }
+
+    function filterRows(query) {
+      const activeTab = document.querySelector('.tab-content.active');
+      if (!activeTab) return;
+      activeTab.querySelectorAll('.report-row').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
+      });
+    }
+
+    const searchInput = document.getElementById('report-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', e => filterRows(e.target.value.toLowerCase().trim()));
+    }
+  </script>
+</body>
+
+</html>

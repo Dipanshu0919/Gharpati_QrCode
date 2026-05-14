@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="mr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard</title>
+  <style>
+    :root {
+      --border: #b7bcc7;
+      --field-bg: #ffffff;
+      --text: #1d2433;
+      --muted: #5f697a;
+      --panel: #fafafa;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .page {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      border: none;
+      background: #fff;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      width: 50px;
+      min-width: 50px;
+      padding: 16px 6px;
+      border-right: 1px solid #dfe4ec;
+      background: #f7f9fc;
+      transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease;
+      overflow: hidden;
+      flex-shrink: 0;
+      z-index: 110;
+    }
+
+    .sidebar:hover {
+      width: 140px;
+      min-width: 140px;
+      padding: 16px 12px;
+    }
+
+    .sidebar .nav-text {
+      display: none;
+    }
+
+    .sidebar:hover .nav-text {
+      display: inline;
+    }
+
+    .sidebar .nav-item {
+      justify-content: center;
+      padding: 10px 0;
+    }
+
+    .sidebar:hover .nav-item {
+      justify-content: flex-start;
+      padding: 10px 12px;
+    }
+
+    .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: transparent;
+      color: #1d2433;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      border: 1px solid transparent;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: #1f4b99;
+      color: #fff;
+      border-color: #1f4b99;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 0;
+      min-width: 0;
+    }
+
+    .header {
+      padding: 14px 18px 8px;
+      border-bottom: 1px solid #eceff4;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.1;
+      color: #14213d;
+    }
+
+    .meta {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 14px 18px 20px;
+    }
+
+    .actions-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-bottom: 18px;
+      padding: 18px;
+      border: 1px solid #dfe4ec;
+      border-radius: 14px;
+      background: #f8fbff;
+    }
+
+    .actions {
+      width: 100%;
+      max-width: 100%;
+      flex: 1 1 0;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .actions summary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      min-height: 40px;
+      padding: 0.65rem 1rem;
+      border-radius: 6px;
+      background: #1f4b99;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      list-style: none;
+      user-select: none;
+      text-decoration: none;
+    }
+
+    .actions summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .csv-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0.65rem 1rem;
+      border: 0;
+      border-radius: 6px;
+      background: #1f4b99;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-decoration: none;
+      align-self: flex-start;
+    }
+
+    .actions .hint {
+      margin: 12px 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .actions form {
+      margin-top: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px 12px;
+    }
+
+    .field {
+      min-width: 0;
+    }
+
+    .label {
+      display: block;
+      margin: 0 0 6px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #31384a;
+      text-align: center;
+    }
+
+    .value {
+      width: 100%;
+      height: 32px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--field-bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .status {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px solid #cfe3d1;
+      background: #edf8ee;
+      color: #215c2d;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .status.error {
+      border-color: #f1c2c2;
+      background: #fdeeee;
+      color: #8d1f1f;
+    }
+
+    .table-wrap {
+      border: 1px solid #dfe4ec;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 80%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid #d6dbe3;
+      padding: 10px 12px;
+      font-size: 15px;
+      vertical-align: middle;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #2f5f9a;
+      color: #fff;
+      text-align: center;
+      font-weight: 700;
+      z-index: 10;
+    }
+
+    td {
+      background: #fff;
+      text-align: center;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 0.5rem 0.9rem;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .btn-edit {
+      background: #1f4b99;
+    }
+
+    .btn-qr {
+      background: #0f8b59;
+    }
+
+    .btn-delete {
+      background: #b42318;
+    }
+
+    .btn-secondary {
+      background: #667085;
+    }
+
+    .edit-row {
+      display: none;
+      background: #f7f9fc;
+    }
+
+    .edit-row.open {
+      display: table-row;
+    }
+
+    .edit-panel {
+      padding: 14px;
+    }
+
+    .edit-panel h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      color: #14213d;
+    }
+
+    .edit-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .small-input {
+      width: 100%;
+      min-height: 34px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .empty {
+      padding: 20px 0 6px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 20px;
+      color: #14213d;
+    }
+
+    .csv-help {
+      display: none;
+      margin: 0 0 18px;
+      padding: 18px;
+      border: 1px solid #dfe4ec;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      max-width: 100%;
+    }
+
+    .csv-help.open {
+      display: block;
+    }
+
+    .csv-help-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .csv-help p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .csv-help-note {
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border-left: 4px solid #1f4b99;
+      background: #eef4ff;
+      color: #344054;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .csv-fields {
+      display: inline-table;
+      width: auto;
+      min-width: 0;
+      max-width: 100%;
+      table-layout: auto;
+      border-collapse: collapse;
+    }
+
+    .csv-fields th,
+    .csv-fields td {
+      padding: 8px 10px;
+      border: 1px solid #d6dbe3;
+      font-size: 14px;
+      text-align: left;
+      vertical-align: top;
+      word-break: break-word;
+    }
+
+    .csv-fields th {
+      background: #2f5f9a;
+      color: #fff;
+    }
+
+    .csv-fields th:first-child,
+    .csv-fields td:first-child {
+      width: 20%;
+    }
+
+    .csv-fields th:last-child,
+    .csv-fields td:last-child {
+      width: 20%;
+    }
+
+    .csv-upload {
+      margin: 0 0 16px;
+      padding: 16px;
+      border: 1px solid #dfe4ec;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .csv-upload form {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .csv-upload form .field {
+      flex: 1 1 320px;
+      min-width: 220px;
+      margin: 0;
+    }
+
+    .csv-upload form button[type="submit"] {
+      flex: 0 0 auto;
+      margin-top: 0;
+    }
+
+    .csv-upload .hint {
+      margin: 10px 0 0;
+      width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 10px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Dropdown Menu Styles */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .btn-dots {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .btn-dots:hover,
+    .btn-dots.active {
+      background: #e2e8f0;
+      color: var(--text);
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 4px);
+      z-index: 100;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      min-width: 140px;
+      padding: 4px;
+      display: none;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .dropdown-menu.show {
+      display: flex;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: left;
+      box-sizing: border-box;
+    }
+
+    .dropdown-item:hover {
+      background: #f1f5f9;
+    }
+
+    .dropdown-item svg {
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <aside class="sidebar" id="sidebar">
+      <nav>
+        <a href="{{ url_for('dashboard') }}" class="nav-item active">
+          <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </span>
+          <span class="nav-text" style="margin-left: 8px;">User</span>
+        </a>
+        <a href="{{ url_for('reports') }}" class="nav-item">
+          <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="20" x2="12" y2="10"></line>
+              <line x1="18" y1="20" x2="18" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="16"></line>
+            </svg>
+          </span>
+          <span class="nav-text" style="margin-left: 8px;">Reports</span>
+        </a>
+        <a href="{{ url_for('generateqr') }}" class="nav-item">
+          <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="5" height="5" x="3" y="3" rx="1"></rect>
+              <rect width="5" height="5" x="16" y="3" rx="1"></rect>
+              <rect width="5" height="5" x="3" y="16" rx="1"></rect>
+              <path d="M21 16h-3v3h3z"></path>
+              <path d="M16 21h-3v-3h3z"></path>
+              <path d="M21 21v.01"></path>
+              <path d="M12 3h.01"></path>
+              <path d="M12 8h.01"></path>
+              <path d="M8 12h.01"></path>
+              <path d="M3 12h.01"></path>
+              <path d="M12 16h.01"></path>
+              <path d="M12 21h.01"></path>
+            </svg>
+          </span>
+          <span class="nav-text" style="margin-left: 8px;">QR generate</span>
+        </a>
+        <a href="{{ url_for('admin_page') }}" class="nav-item">
+          <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M6 20v-1a6 6 0 0 1 12 0v1"></path>
+            </svg>
+          </span>
+          <span class="nav-text" style="margin-left: 8px;">Admin</span>
+        </a>
+        <a href="{{ url_for('logout') }}" class="nav-item" style="margin-top: auto; color: #b42318;"
+          onclick="return confirm('Logout from admin panel?');">
+          <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </span>
+          <span class="nav-text" style="margin-left: 8px;">Logout</span>
+        </a>
+      </nav>
+    </aside>
+    <div class="main-content">
+      <div class="header">
+        <h1>Dashboard</h1>
+        <p class="meta">Database records are shown below.</p>
+      </div>
+
+      <div class="content">
+        {% set preserve_fields = ['midkatkram', 'malkachenaab'] %}
+        <div class="actions-row">
+          <details class="actions">
+            <summary>Add New Record</summary>
+            <p class="hint">Fill in the details below to add a user.</p>
+            <form id="add-user-form">
+              <div class="grid">
+                {% for dbname, marathi in fields.items() %}
+                <div class="field">
+                  <label class="label">{{ marathi }}</label>
+                  <input class="value" type="text" name="{{ dbname }}" value="0">
+                </div>
+                {% endfor %}
+              </div>
+              <div style="margin-top: 14px;">
+                <button type="submit"
+                  style="padding: 0.65rem 1rem; border: 0; border-radius: 6px; background: #1f4b99; color: #fff; font-weight: 700; cursor: pointer;">Save</button>
+              </div>
+            </form>
+            <div id="add-user-status" class="status">Record saved.</div>
+          </details>
+
+          <button type="button" class="csv-toggle" id="csv-help-toggle">CSV Upload</button>
+        </div>
+
+        <div id="csv-help" class="csv-help">
+          <div class="csv-help-header">
+            <h3 class="section-title" style="margin-bottom: 0;">CSV Format Guide</h3>
+          </div>
+          <p class="csv-help-note">Use the exact header names shown below. Each row in the CSV becomes one record.</p>
+          <div class="csv-upload">
+            <form action="{{ url_for('add_user_csv') }}" method="post" enctype="multipart/form-data">
+              <div class="field" style="max-width: 420px;">
+                <input id="csv-file" class="small-input" type="file" name="file" accept=".csv,text/csv" required>
+              </div>
+              <button type="submit"
+                style="padding: 0.65rem 1rem; border: 0; border-radius: 6px; background: #1f4b99; color: #fff; font-weight: 700; cursor: pointer;">Upload
+                CSV</button>
+              <p class="hint">
+                CSV file should contain these exact headers: <code>midkatkram</code>, <code>malkachenaab</code>,
+                <code>gharpati_magil</code>, <code>gharpati_chalu</code>, <code>gharpati_akun</code>,
+                <code>divabatti_magil</code>, <code>divabatti_chalu</code>, <code>divabatti_akun</code>,
+                <code>arogya_magil</code>,<code>arogya_chalu</code>, <code>arogya_akun</code>,
+                <code>panipati_magil</code>, <code>panipati_chalu</code>, <code>panipati_akun</code>,
+                <code>akud_dey_rakam</code>.
+              </p>
+            </form>
+          </div>
+          <table class="csv-fields">
+            <thead>
+              <tr>
+                <th>CSV Header</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for dbname, marathi in fields.items() %}
+              <tr>
+                <td><code>{{ dbname }}</code></td>
+                <td>{{ marathi }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if users == None %}
+        <div class="empty">No records available.</div>
+        {% else %}
+        <div style="margin-bottom: 14px;">
+          <input type="text" id="table-search" class="value" placeholder="Search records..."
+            style="max-width: 300px; text-align: left;">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 40px; padding-left: 4px; padding-right: 4px;">Sr.</th>
+                {% for dbname, marathi in fields.items() %}
+                <th>{{ marathi }}</th>
+                {% endfor %}
+                <th>Payment</th>
+                <th style="width: 44px; padding-left: 2px; padding-right: 2px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr class="record-row">
+                <td style="padding-left: 4px; padding-right: 4px;">{{ user.sr_no or '-' }}</td>
+                {% for dbname, marathi in fields.items() %}
+                <td>{{ user[dbname] or '-' }}</td>
+                {% endfor %}
+                <td>
+                  {% if user.payment_ss %}
+                  <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                    <a href="{{ url_for('view_photo', sr_no=user.sr_no) }}" target="_blank" class="btn btn-secondary"
+                      style="background: #0f172a; white-space: nowrap; padding: 4px 10px; font-size: 13px;">View SS</a>
+                    {% if user.payment_status == "Pending" %}
+                    <a href="{{ url_for('approve_payment', sr_no=user.sr_no) }}"
+                      style="display: inline-block; padding: 4px 10px; background: #059669; color: #fff; border-radius: 6px; font-weight: 700; font-size: 13px; text-decoration: none; white-space: nowrap;"
+                      onclick="return confirm('Approve payment for this user?');">Approve</a>
+                    {% else %}
+                    <span
+                      style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; border-radius: 6px; font-weight: 700; font-size: 12px; white-space: nowrap;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                      Approved
+                    </span>
+                    {% endif %}
+                  </div>
+                  {% else %}
+                  <span style="color: #9ca3af; font-size: 13px;">None</span>
+                  {% endif %}
+                </td>
+                <td style="padding-left: 2px; padding-right: 2px;">
+                  <div class="dropdown">
+                    <button type="button" class="btn-dots" onclick="toggleDropdown(event, 'dropdown-{{ user.sr_no }}')"
+                      title="More actions">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                      </svg>
+                    </button>
+                    <div id="dropdown-{{ user.sr_no }}" class="dropdown-menu">
+                      <a href="{{ url_for('qr_code', sr_no=user.sr_no) }}" class="dropdown-item"
+                        onclick="closeAllDropdowns()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download QR
+                      </a>
+                      <a href="{{ url_for('view_user', sr_no=user.sr_no)}}" target="_blank" class="dropdown-item"> <svg
+                          xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        </svg> View User</a>
+
+                      <button type="button" class="dropdown-item" data-edit-target="edit-row-{{ user.sr_no }}"
+                        onclick="closeAllDropdowns()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Edit
+                      </button>
+                      <form action="{{ url_for('delete_user', sr_no=user.sr_no) }}" method="post" style="margin: 0;"
+                        onsubmit="return confirm('Are you sure you want to delete this record?');">
+                        <button type="submit" class="dropdown-item">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                            </path>
+                          </svg>
+                          Delete
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr id="edit-row-{{ user.sr_no }}" class="edit-row">
+                <td colspan="{{ fields|length + 3 }}">
+                  <div class="edit-panel">
+                    <h3>Edit Record ( {{ user.midkatkram }} )</h3>
+                    <form action="{{ url_for('edit_user', sr_no=user.sr_no) }}" method="post">
+                      <div class="edit-grid">
+                        {% for dbname, marathi in fields.items() %}
+                        <div class="field">
+                          <label class="label">{{ marathi }}</label>
+                          <input class="small-input" type="text" name="{{ dbname }}" value="{{ user[dbname] or '' }}">
+                        </div>
+                        {% endfor %}
+                      </div>
+                      <div class="edit-actions">
+                        <button type="submit" class="btn btn-edit">Save Changes</button>
+                        <button type="button" class="btn btn-secondary"
+                          data-close-target="edit-row-{{ user.sr_no }}">Cancel</button>
+                      </div>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById('add-user-form');
+      const statusBox = document.getElementById('add-user-status');
+      const csvHelpToggle = document.getElementById('csv-help-toggle');
+      const csvHelp = document.getElementById('csv-help');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        statusBox.style.display = 'none';
+        statusBox.classList.remove('error');
+
+        try {
+          const response = await fetch("{{ url_for('add_user') }}", {
+            method: 'POST',
+            body: new FormData(form),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to save record');
+          }
+
+          statusBox.textContent = 'Record saved.';
+          statusBox.style.display = 'block';
+          form.reset();
+          window.location.reload();
+        } catch (error) {
+          statusBox.textContent = 'Could not save the record.';
+          statusBox.classList.add('error');
+          statusBox.style.display = 'block';
+        }
+      });
+
+      csvHelpToggle.addEventListener('click', () => {
+        csvHelp.classList.toggle('open');
+      });
+
+      document.querySelectorAll('[data-edit-target]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const targetId = button.getAttribute('data-edit-target');
+          const row = document.getElementById(targetId);
+          if (!row) {
+            return;
+          }
+          row.classList.toggle('open');
+        });
+      });
+
+      document.querySelectorAll('[data-close-target]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const targetId = button.getAttribute('data-close-target');
+          const row = document.getElementById(targetId);
+          if (!row) {
+            return;
+          }
+          row.classList.remove('open');
+        });
+      });
+
+      function closeAllDropdowns() {
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+          menu.classList.remove('show');
+        });
+        document.querySelectorAll('.btn-dots.active').forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+
+      function toggleDropdown(event, dropdownId) {
+        event.stopPropagation();
+        const targetMenu = document.getElementById(dropdownId);
+        if (!targetMenu) return;
+        const isCurrentlyShown = targetMenu.classList.contains('show');
+
+        closeAllDropdowns();
+
+        if (!isCurrentlyShown) {
+          targetMenu.classList.add('show');
+          event.currentTarget.classList.add('active');
+        }
+      }
+
+      document.addEventListener('click', (event) => {
+        if (!event.target.closest('.dropdown')) {
+          closeAllDropdowns();
+        }
+      });
+
+      const tableSearch = document.getElementById('table-search');
+      if (tableSearch) {
+        tableSearch.addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          document.querySelectorAll('.record-row').forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(query)) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+              const nextRow = row.nextElementSibling;
+              if (nextRow && nextRow.classList.contains('edit-row')) {
+                nextRow.classList.remove('open');
+              }
+            }
+          });
+        });
+      }
+    </script>
+</body>
+
+</html>

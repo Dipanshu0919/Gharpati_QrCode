@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="mr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Print All QR Codes</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f1f5f9;
+            font-family: Arial, sans-serif;
+        }
+
+        .no-print {
+            padding: 16px;
+            background: #ffffff;
+            border-bottom: 1px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #1f4b99;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: #163773;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .print-container {
+            width: 100%;
+            padding: 20px;
+            margin: 0 auto;
+        }
+
+        .print-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            width: 100%;
+            height: 100%;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .card-img {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 5mm;
+            }
+
+            body {
+                background: #ffffff;
+                margin: 0;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-container {
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+
+            .print-grid {
+                display: block;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                page-break-after: always;
+                break-after: page;
+            }
+
+            .print-grid::after {
+                content: "";
+                display: table;
+                clear: both;
+            }
+
+            .card-wrapper {
+                float: left;
+                width: 33.33%;
+                padding: 1.5mm;
+                margin: 0;
+                box-sizing: border-box;
+                background: transparent;
+                border: none;
+                border-radius: 0;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            .card-img {
+                max-width: 100%;
+                height: auto;
+                display: block;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="no-print">
+        <div style="font-size: 18px; font-weight: 700; color: #0f172a;">Print QR Code Cards (3x5 Grid)</div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.print()" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect width="12" height="8" x="6" y="14"></rect>
+                </svg>
+                Print Now
+            </button>
+            <a href="{{ url_for('generateqr') }}" class="btn btn-secondary">Back</a>
+        </div>
+    </div>
+
+    <div class="print-container">
+        {% if not users %}
+        <div style="padding: 40px; text-align: center; color: #64748b;">No records found to print.</div>
+        {% else %}
+        {% set chunk_size = 15 %}
+        {% for i in range(0, users|length, chunk_size) %}
+        {% set chunk = users[i:i+chunk_size] %}
+        <div class="print-grid">
+            {% for user in chunk %}
+            <div class="card-wrapper">
+                <img class="card-img" src="{{ user.base64_img }}"
+                    alt="QR Card Sr. {{ user.sr_no }}">
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+</body>
+
+</html>

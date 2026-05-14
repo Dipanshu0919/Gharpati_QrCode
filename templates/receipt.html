@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="mr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>कर भरणा पावती - ग्रामपंचायत</title>
+  <meta name="description" content="ग्रामपंचायत कर भरणा पावती व अधिकृत तपशील">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-page: #f0f4f8;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --primary: #1e3a8a;
+      --primary-light: #eff6ff;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 40px -15px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px;
+    }
+
+    /* Top Action Bar for web view */
+    .actions-wrapper {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #1e3a8a);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1d4ed8, #172554);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(30, 58, 138, 0.15);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: #f8fafc;
+      transform: translateY(-2px);
+    }
+
+    /* Main Receipt Card */
+    .receipt-card {
+      position: relative;
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 800px;
+      border-radius: 20px;
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      padding: 48px;
+    }
+
+    /* Decorative top accent gradient bar */
+    .receipt-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #1e3a8a, #3b82f6, #059669);
+    }
+
+    /* Watermark background stamp */
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-25deg);
+      font-size: 100px;
+      font-weight: 800;
+      color: rgba(5, 150, 105, 0.03);
+      white-space: nowrap;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+    }
+
+    .receipt-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header Section */
+    .receipt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 28px;
+      margin-bottom: 32px;
+    }
+
+    .header-titles {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      align-items: center;
+      text-align: center;
+    }
+
+    .gp-name-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .header-titles h2 {
+      font-size: 20px;
+      font-weight: 900;
+      color: #000000;
+      font-family: inherit;
+      letter-spacing: 0;
+    }
+
+    .header-titles p {
+      font-size: 15px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Paid / Stamp Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: var(--success-bg);
+      color: var(--success);
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 14px;
+      border: 1px solid rgba(5, 150, 105, 0.2);
+    }
+
+    /* Meta Details Row */
+    .receipt-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 20px;
+      background-color: var(--primary-light);
+      padding: 16px 24px;
+      border-radius: 12px;
+      margin-bottom: 32px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .meta-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .meta-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* User Profile Info */
+    .user-info-section {
+      margin-bottom: 36px;
+    }
+
+    .section-heading {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-heading::before {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background-color: var(--primary);
+      border-radius: 2px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background-color: #fafbfc;
+    }
+
+    .info-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .info-field-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .info-field-value {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-main);
+      word-break: break-word;
+    }
+
+    /* Tax Breakdown Table */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      margin-bottom: 36px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .receipt-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .receipt-table th,
+    .receipt-table td {
+      padding: 14px 18px;
+      font-size: 15px;
+    }
+
+    .receipt-table th {
+      background-color: #f8fafc;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .receipt-table td {
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .receipt-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Numbers right aligned */
+    .receipt-table th.num,
+    .receipt-table td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Grand Total Row */
+    .grand-total-row {
+      background-color: var(--primary-light);
+      border-top: 2px solid var(--primary);
+    }
+
+    .grand-total-row td {
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--primary);
+      padding-top: 18px;
+      padding-bottom: 18px;
+    }
+
+    /* Footer Notes */
+    .receipt-footer {
+      text-align: center;
+      padding-top: 24px;
+      border-top: 1px dashed var(--border-color);
+      color: var(--text-muted);
+    }
+
+    .receipt-footer p {
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .receipt-footer .slogan {
+      font-weight: 600;
+      color: var(--success);
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    /* Print specific styling */
+    @media print {
+      body {
+        background-color: transparent !important;
+        padding: 0 !important;
+        justify-content: flex-start;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .receipt-card {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 10px !important;
+        max-width: 100% !important;
+        width: 100% !important;
+      }
+
+      .receipt-card::before {
+        display: none !important;
+      }
+
+      .info-grid,
+      .receipt-meta,
+      .receipt-table th {
+        background-color: #f8fafc !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .status-badge,
+      .grand-total-row {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+
+    /* Small screens responsiveness */
+    @media (max-width: 640px) {
+      .receipt-card {
+        padding: 24px 16px;
+        border-radius: 16px;
+      }
+
+      .receipt-header {
+        flex-direction: column;
+        gap: 16px;
+        padding-bottom: 20px;
+        align-items: center;
+      }
+
+      .receipt-table th,
+      .receipt-table td {
+        padding: 12px 10px;
+        font-size: 14px;
+      }
+
+      .grand-total-row td {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Top Action Controls (Hidden on Print) -->
+  <div class="actions-wrapper no-print">
+    <button onclick="window.print()" class="btn btn-primary" id="downloadBtn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 9V2h12v7" />
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+        <path d="M6 14h12v8H6z" />
+      </svg>
+      पावती डाउनलोड करा (Print/Download)
+    </button>
+  </div>
+
+  <!-- Receipt Document -->
+  <main class="receipt-card" id="receiptDocument">
+    <div class="watermark">PAID SUCCESS</div>
+
+    <div class="receipt-content">
+
+      <!-- Header -->
+      <header class="receipt-header">
+        <div class="header-titles">
+          <div class="gp-name-title">
+            {{ gp_name }}
+          </div>
+          <h2>ग्रामपंचायत कार्यालय</h2>
+          <p>कर भरणा पावती (Tax Payment Receipt)</p>
+        </div>
+      </header>
+
+      <!-- Meta Info Bar -->
+      <section class="receipt-meta">
+        <div class="meta-item">
+          <span class="meta-label">दिनांक (Date)</span>
+          <span class="meta-value">{{ date }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">स्थिती (Status)</span>
+          <span class="meta-value" style="color: var(--success);">Paid</span>
+        </div>
+      </section>
+
+      <!-- Profile Information -->
+      <section class="user-info-section">
+        <h2 class="section-heading">मालमत्ता व धारकाचा तपशील</h2>
+        <div class="info-grid">
+          <div class="info-field">
+            <span class="info-field-label">मालकाचे नाव (Owner Name)</span>
+            <span class="info-field-value">{{ user['malkachenaab'] or '-' }}</span>
+          </div>
+          <div class="info-field">
+            <span class="info-field-label">मिळकत क्रमांक (Property ID)</span>
+            <span class="info-field-value">{{ user['midkatkram'] or '-' }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tax Matrix Breakdown -->
+      <section class="tax-table-section">
+        <h2 class="section-heading">कराचा तपशील (Tax Breakdown)</h2>
+        <div class="table-responsive">
+          <table class="receipt-table">
+            <thead>
+              <tr>
+                <th>कराचा प्रकार (Tax Type)</th>
+                <th class="num">मागील थकबाकी (Arrears)</th>
+                <th class="num">चालू मागणी (Current)</th>
+                <th class="num">एकूण (Total)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- House Tax -->
+              <tr>
+                <td><strong>घरपट्टी</strong> (House Tax)</td>
+                <td class="num">₹ {{ user['gharpati_magil'] or '0' }}</td>
+                <td class="num">₹ {{ user['gharpati_chalu'] or '0' }}</td>
+                <td class="num"><strong>₹ {{ user['gharpati_akun'] or '0' }}</strong></td>
+              </tr>
+              <!-- Lighting Tax -->
+              <tr>
+                <td><strong>दिवाबत्ती</strong> (Lighting Tax)</td>
+                <td class="num">₹ {{ user['divabatti_magil'] or '0' }}</td>
+                <td class="num">₹ {{ user['divabatti_chalu'] or '0' }}</td>
+                <td class="num"><strong>₹ {{ user['divabatti_akun'] or '0' }}</strong></td>
+              </tr>
+              <!-- Health Tax -->
+              <tr>
+                <td><strong>आरोग्य कर</strong> (Health Tax)</td>
+                <td class="num">₹ {{ user['arogya_magil'] or '0' }}</td>
+                <td class="num">₹ {{ user['arogya_chalu'] or '0' }}</td>
+                <td class="num"><strong>₹ {{ user['arogya_akun'] or '0' }}</strong></td>
+              </tr>
+              <!-- Water Tax -->
+              <tr>
+                <td><strong>पाणीपट्टी</strong> (Water Tax)</td>
+                <td class="num">₹ {{ user['panipati_magil'] or '0' }}</td>
+                <td class="num">₹ {{ user['panipati_chalu'] or '0' }}</td>
+                <td class="num"><strong>₹ {{ user['panipati_akun'] or '0' }}</strong></td>
+              </tr>
+              <!-- Grand Total -->
+              <tr class="grand-total-row">
+                <td colspan="3">एकूण भरलेली रक्कम (Total Amount Paid)</td>
+                <td class="num">₹ {{ user['akud_dey_rakam'] or '0' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Footer Notes -->
+      <footer class="receipt-footer">
+        <p>सदर पावती संगणकीकृत असल्याने त्यावर स्वाक्षरीची आवश्यकता नाही.</p>
+        <p>This is a system generated receipt and does not require a physical signature.</p>
+        <div class="slogan">कर वेळेत भरल्याबद्दल धन्यवाद! आपला कर, गावाचा विकास.</div>
+      </footer>
+
+    </div>
+  </main>
+
+</body>
+
+</html>
