@@ -127,6 +127,7 @@ def insert_user(data):
     conn.commit()
     conn.close()
 
+
 def insert_users(rows):
     if not rows:
         return
@@ -225,28 +226,6 @@ def draw_fitted_title(draw, text, img_width, header_h, color):
         y = (header_h - size) // 2
         draw_multilingual_text(draw, (img_width - w) // 2, y, text, color, size)
 
-def draw_fitted_text(draw, text, box, fill, max_size=28, min_size=14, align='left'):
-    x0, y0, x1, y1 = box
-    width = max(1, x1 - x0)
-    height = max(1, y1 - y0)
-    chosen_size = min_size
-    chosen_width = 0
-    for size in range(max_size, min_size - 1, -1):
-        text_width = get_multilingual_text_width(draw, text, size)
-        if text_width <= width:
-            chosen_size = size
-            chosen_width = text_width
-            break
-    else:
-        chosen_width = get_multilingual_text_width(draw, text, min_size)
-    font_y = y0 + max(0, (height - chosen_size) // 2)
-    if align == 'center':
-        font_x = x0 + max(0, (width - chosen_width) // 2)
-    elif align == 'right':
-        font_x = x1 - chosen_width
-    else:
-        font_x = x0
-    draw_multilingual_text(draw, font_x, font_y, text, fill, chosen_size)
 
 def parse_receipt_date(payment_status):
     if not payment_status or payment_status == "Pending":
@@ -257,136 +236,6 @@ def parse_receipt_date(payment_status):
     except Exception:
         return payment_status
 
-def build_receipt_pdf(user, date_text):
-    user_dict = dict(user)
-    page_width = 1240
-    page_height = 1754
-    margin = 70
-    card_left = margin
-    card_top = 70
-    card_right = page_width - margin
-    card_bottom = page_height - margin
-    card_width = card_right - card_left
-
-    background = Image.new('RGB', (page_width, page_height), '#f0f4f8')
-    draw = ImageDraw.Draw(background)
-
-    draw.rounded_rectangle(
-        [card_left, card_top, card_right, card_bottom],
-        radius=24,
-        fill='#ffffff',
-        outline='#dbe3ee',
-        width=3,
-    )
-    draw.rectangle([card_left, card_top, card_right, card_top + 10], fill='#1e3a8a')
-    draw_fitted_text(draw, 'PAID SUCCESS', (260, 760, 980, 1180), fill=(5, 150, 105, 18), max_size=92, min_size=72, align='center')
-
-    inner_left = card_left + 48
-    inner_right = card_right - 48
-    y = card_top + 38
-
-    draw_fitted_text(draw, GP_NAME, (inner_left, y, inner_right, y + 54), '#0f172a', max_size=34, min_size=24, align='center')
-    y += 52
-    draw_fitted_text(draw, 'ग्रामपंचायत कार्यालय', (inner_left, y, inner_right, y + 52), '#000000', max_size=30, min_size=20, align='center')
-    y += 42
-    draw_fitted_text(draw, 'कर भरणा पावती (Tax Payment Receipt)', (inner_left, y, inner_right, y + 44), '#475569', max_size=22, min_size=16, align='center')
-
-    y = card_top + 220
-    meta_height = 110
-    meta_bg = '#eff6ff'
-    meta_left = inner_left
-    meta_right = inner_right
-    draw.rounded_rectangle([meta_left, y, meta_right, y + meta_height], radius=16, fill=meta_bg)
-    mid = meta_left + (meta_right - meta_left) // 2
-    draw.line([mid, y + 18, mid, y + meta_height - 18], fill='#d6e2f2', width=2)
-    draw_fitted_text(draw, 'दिनांक (Date)', (meta_left + 22, y + 18, mid - 22, y + 48), '#64748b', max_size=16, min_size=14, align='left')
-    draw_fitted_text(draw, date_text or '-', (meta_left + 22, y + 52, mid - 22, y + 92), '#1e3a8a', max_size=20, min_size=16, align='left')
-    draw_fitted_text(draw, 'स्थिती (Status)', (mid + 22, y + 18, meta_right - 22, y + 48), '#64748b', max_size=16, min_size=14, align='left')
-    draw_fitted_text(draw, 'Paid', (mid + 22, y + 52, meta_right - 22, y + 92), '#059669', max_size=20, min_size=16, align='left')
-
-    y = y + meta_height + 34
-    draw_fitted_text(draw, 'मालमत्ता व धारकाचा तपशील', (inner_left, y, inner_right, y + 40), '#0f172a', max_size=20, min_size=16, align='left')
-    y += 52
-    info_height = 112
-    info_width = (meta_right - meta_left - 16) // 2
-    info_gap = 16
-    info_boxes = [
-        (meta_left, y, meta_left + info_width, y + info_height),
-        (meta_left + info_width + info_gap, y, meta_right, y + info_height),
-    ]
-    info_labels = [
-        ('मालकाचे नाव (Owner Name)', user_dict.get('malkachenaab') or '-'),
-        ('मिळकत क्रमांक (Property ID)', user_dict.get('midkatkram') or '-'),
-    ]
-    for box, (label, value) in zip(info_boxes, info_labels):
-        x0, y0, x1, y1 = box
-        draw.rounded_rectangle(box, radius=14, fill='#f8fbff', outline='#dbe3ee', width=2)
-        draw_fitted_text(draw, label, (x0 + 18, y0 + 14, x1 - 18, y0 + 42), '#64748b', max_size=15, min_size=13, align='left')
-        draw_fitted_text(draw, value, (x0 + 18, y0 + 48, x1 - 18, y1 - 14), '#111827', max_size=24, min_size=16, align='left')
-
-    y = y + info_height + 34
-    draw_fitted_text(draw, 'कराचा तपशील (Tax Breakdown)', (inner_left, y, inner_right, y + 40), '#0f172a', max_size=20, min_size=16, align='left')
-    y += 52
-    table_top = y
-    row_height = 76
-    col_widths = [card_width * 0.40, card_width * 0.20, card_width * 0.20, card_width * 0.20]
-    table_left = inner_left
-    table_right = inner_right
-    table_width = table_right - table_left
-    col_positions = [table_left]
-    for width in col_widths:
-        col_positions.append(col_positions[-1] + width)
-
-    header_h = 72
-    draw.rounded_rectangle([table_left, table_top, table_right, table_top + header_h + row_height * 5], radius=14, fill='#ffffff', outline='#d6dbe3', width=2)
-    draw.rectangle([table_left, table_top, table_right, table_top + header_h], fill='#2f5f9a')
-    headers = [
-        'कराचा प्रकार (Tax Type)',
-        'मागील थकबाकी (Arrears)',
-        'चालू मागणी (Current)',
-        'एकूण (Total)',
-    ]
-    for idx, header in enumerate(headers):
-        x0 = col_positions[idx]
-        x1 = col_positions[idx + 1]
-        draw.line([x1, table_top, x1, table_top + header_h + row_height * 5], fill='#d6dbe3', width=2)
-        draw_fitted_text(draw, header, (x0 + 10, table_top + 12, x1 - 10, table_top + header_h - 12), '#ffffff', max_size=17, min_size=13, align='center')
-    draw.line([table_left, table_top + header_h, table_right, table_top + header_h], fill='#d6dbe3', width=2)
-
-    rows = [
-        ('घरपट्टी (House Tax)', user_dict.get('gharpati_magil') or '0', user_dict.get('gharpati_chalu') or '0', user_dict.get('gharpati_akun') or '0'),
-        ('दिवाबत्ती (Lighting Tax)', user_dict.get('divabatti_magil') or '0', user_dict.get('divabatti_chalu') or '0', user_dict.get('divabatti_akun') or '0'),
-        ('आरोग्य कर (Health Tax)', user_dict.get('arogya_magil') or '0', user_dict.get('arogya_chalu') or '0', user_dict.get('arogya_akun') or '0'),
-        ('पाणीपट्टी (Water Tax)', user_dict.get('panipati_magil') or '0', user_dict.get('panipati_chalu') or '0', user_dict.get('panipati_akun') or '0'),
-    ]
-    for row_index, row in enumerate(rows):
-        top = table_top + header_h + row_index * row_height
-        bottom = top + row_height
-        if row_index % 2 == 0:
-            draw.rectangle([table_left, top, table_right, bottom], fill='#f8fafc')
-        draw.line([table_left, bottom, table_right, bottom], fill='#d6dbe3', width=2)
-        draw_fitted_text(draw, row[0], (col_positions[0] + 12, top + 12, col_positions[1] - 12, bottom - 12), '#111827', max_size=18, min_size=14, align='left')
-        draw_fitted_text(draw, f'₹ {row[1]}', (col_positions[1] + 12, top + 12, col_positions[2] - 12, bottom - 12), '#111827', max_size=18, min_size=14, align='center')
-        draw_fitted_text(draw, f'₹ {row[2]}', (col_positions[2] + 12, top + 12, col_positions[3] - 12, bottom - 12), '#111827', max_size=18, min_size=14, align='center')
-        draw_fitted_text(draw, f'₹ {row[3]}', (col_positions[3] + 12, top + 12, col_positions[4] - 12, bottom - 12), '#111827', max_size=18, min_size=14, align='center')
-
-    total_top = table_top + header_h + len(rows) * row_height
-    total_bottom = total_top + row_height
-    draw.rectangle([table_left, total_top, table_right, total_bottom], fill='#ecfdf5')
-    draw.line([table_left, total_top, table_right, total_top], fill='#d6e7dc', width=2)
-    draw.line([table_left, total_bottom, table_right, total_bottom], fill='#d6e7dc', width=2)
-    draw_fitted_text(draw, 'एकूण भरलेली रक्कम (Total Amount Paid)', (col_positions[0] + 12, total_top + 12, col_positions[3] - 12, total_bottom - 12), '#065f46', max_size=18, min_size=14, align='left')
-    draw_fitted_text(draw, f"₹ {user_dict.get('akud_dey_rakam') or '0'}", (col_positions[3] + 12, total_top + 12, col_positions[4] - 12, total_bottom - 12), '#065f46', max_size=20, min_size=16, align='center')
-
-    footer_y = total_bottom + 42
-    draw_fitted_text(draw, 'सदर पावती संगणकीकृत असल्याने त्यावर स्वाक्षरीची आवश्यकता नाही.', (inner_left, footer_y, inner_right, footer_y + 28), '#475569', max_size=17, min_size=13, align='center')
-    draw_fitted_text(draw, 'This is a system generated receipt and does not require a physical signature.', (inner_left, footer_y + 34, inner_right, footer_y + 62), '#475569', max_size=15, min_size=12, align='center')
-    draw_fitted_text(draw, 'कर वेळेत भरल्याबद्दल धन्यवाद! आपला कर, गावाचा विकास.', (inner_left, footer_y + 84, inner_right, footer_y + 124), '#1e3a8a', max_size=18, min_size=14, align='center')
-
-    buffer = io.BytesIO()
-    background.save(buffer, format='PDF', resolution=150.0)
-    buffer.seek(0)
-    return buffer
 
 def generate_qr_card_image(user, base_url=None):
     user_dict = dict(user)
@@ -711,29 +560,7 @@ def receipt(sr_no):
         return "Payment not approved yet"
     Indiandate = parse_receipt_date(user["payment_status"])
     return render_template('receipt.html', user=user, date=Indiandate, gp_name=GP_NAME)
-
-
-@app.route('/receipt/<int:sr_no>/download')
-@login_required
-def download_receipt_pdf(sr_no):
-    conn, c = get_db()
-    c.execute('SELECT * FROM users WHERE sr_no = ?', (sr_no,))
-    user = c.fetchone()
-    conn.close()
-    if not user:
-        return "Receipt not found", 404
-    if user['payment_status'] == "Pending":
-        return "Payment not approved yet"
-
-    Indiandate = parse_receipt_date(user["payment_status"])
-    pdf_buffer = build_receipt_pdf(user, Indiandate)
-    return send_file(
-        pdf_buffer,
-        mimetype='application/pdf',
-        as_attachment=True,
-        download_name=f"receipt_{sr_no}.pdf",
-    )
-
+    
 
 @app.route('/approve/payment/<int:sr_no>')
 @login_required
