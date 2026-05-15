@@ -41,3 +41,9 @@ Thumbs.db
 # Application files
 users.db
 static/qr_*.png
+
+
+test.py
+
+static/qr_*.png
+static/user_payments/
