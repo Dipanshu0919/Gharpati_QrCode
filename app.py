@@ -12,6 +12,7 @@ from functools import wraps
 from PIL import Image, ImageDraw, ImageFont
 from flask import Flask, render_template, request, redirect, url_for, send_file, session, flash
 
+
 app = Flask(__name__)
 app.secret_key = "replace-with-a-secure-key"
 app.config['SESSION_PERMANENT'] = False
@@ -231,7 +232,10 @@ def parse_receipt_date(payment_status):
     if not payment_status or payment_status == "Pending":
         return None
     try:
-        raw_date = payment_status.split(" ", 1)[1]
+        match = re.search(r"\d{4}-\d{2}-\d{2}", payment_status)
+        if not match:
+            return payment_status
+        raw_date = match.group(0)
         return datetime.datetime.strptime(raw_date, "%Y-%m-%d").strftime("%d %B %Y (%d-%m-%Y)")
     except Exception:
         return payment_status
@@ -550,7 +554,6 @@ def view_photo(sr_no):
 
 
 @app.route('/receipt/<int:sr_no>')
-@login_required
 def receipt(sr_no):
     conn, c = get_db()
     c.execute('SELECT * FROM users WHERE sr_no = ?', (sr_no,))
@@ -560,7 +563,7 @@ def receipt(sr_no):
         return "Payment not approved yet"
     Indiandate = parse_receipt_date(user["payment_status"])
     return render_template('receipt.html', user=user, date=Indiandate, gp_name=GP_NAME)
-    
+
 
 @app.route('/approve/payment/<int:sr_no>')
 @login_required

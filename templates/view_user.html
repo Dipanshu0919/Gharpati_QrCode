@@ -219,6 +219,12 @@
         <div class="payment-section">
           <div style="text-align: center; margin-bottom: 24px;">
             {% if upi_qr_exists %}
+            <div style="margin-bottom: 12px;">
+              <a href="{{ url_for('static', filename=upi_qr_filename) }}" download
+                style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: #1f4b99; color: #fff; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 14px; box-shadow: 0 4px 10px rgba(31,75,153,.15);">
+                QR कोड डाउनलोड करा
+              </a>
+            </div>
             <img src="{{ url_for('static', filename=upi_qr_filename) }}" alt="UPI QR Code"
               style="max-width: 240px; border-radius: 16px; border: 3px solid #dfe4ec; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
             {% else %}
