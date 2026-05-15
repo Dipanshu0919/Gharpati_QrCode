@@ -7,10 +7,12 @@ import qrcode
 import sqlite3
 import re
 import zipfile
+from decimal import Decimal, InvalidOperation
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 from PIL import Image, ImageDraw, ImageFont
 from flask import Flask, render_template, request, redirect, url_for, send_file, session, flash
+from urllib.parse import quote
 
 
 app = Flask(__name__)
@@ -55,12 +57,9 @@ fields = {
 
 @app.context_processor
 def inject_globals():
-    upi_qr_path = os.path.join(app.static_folder, UPI_QR_FILENAME)
     return {
         "fields": fields,
         "gp_name": GP_NAME,
-        "upi_qr_filename": UPI_QR_FILENAME,
-        "upi_qr_exists": os.path.exists(upi_qr_path),
     }
 
 def login_required(f):
@@ -109,9 +108,11 @@ def init_db():
             admin_contact TEXT NOT NULL,
             admin_email TEXT NOT NULL UNIQUE,
             admin_password TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            upi_id TEXT DEFAULT NULL
         )
     ''')
+
     conn.commit()
     conn.close()
 
@@ -239,6 +240,61 @@ def parse_receipt_date(payment_status):
         return datetime.datetime.strptime(raw_date, "%Y-%m-%d").strftime("%d %B %Y (%d-%m-%Y)")
     except Exception:
         return payment_status
+
+
+def normalize_amount(value):
+    if value is None:
+        return None
+    raw = str(value).strip().replace(',', '')
+    if not raw:
+        return None
+    try:
+        amount = Decimal(raw)
+    except (InvalidOperation, ValueError):
+        return None
+    if amount <= 0:
+        return None
+    normalized = format(amount.normalize(), 'f')
+    if '.' in normalized:
+        normalized = normalized.rstrip('0').rstrip('.')
+    return normalized
+
+
+def build_upi_payment_uri(admin_upi_id, amount):
+    normalized_amount = normalize_amount(amount)
+    if not admin_upi_id or not normalized_amount:
+        return None
+    return (
+        "upi://pay"
+        f"?pa={admin_upi_id.strip()}"
+        "&pn=grampanchayat"
+        f"&tn={quote('घरपट्टी भरणा', safe='')}"
+        f"&am={normalized_amount}"
+        "&cu=INR"
+    )
+
+
+def qr_data_url(payload):
+    if not payload:
+        return None
+    buffer = qr_png_buffer(payload)
+    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
+
+
+def qr_png_buffer(payload):
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=8,
+        border=2,
+    )
+    qr.add_data(payload)
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
+    buffer = io.BytesIO()
+    qr_img.save(buffer, format='PNG')
+    buffer.seek(0)
+    return buffer
 
 
 def generate_qr_card_image(user, base_url=None):
@@ -450,11 +506,42 @@ def view_user(sr_no):
     conn, c = get_db()
     c.execute('SELECT * FROM users WHERE sr_no = ?', (sr_no,))
     user = c.fetchone()
+    c.execute('SELECT upi_id FROM admins LIMIT 1')
+    admin = c.fetchone()
     conn.close()
     if not user:
         return "User not found", 404
     session["current_user"] = user["sr_no"]
-    return render_template('view_user.html', user=user)
+    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['akud_dey_rakam'])
+    upi_qr_data = qr_data_url(upi_payment_uri)
+    return render_template(
+        'view_user.html',
+        user=user,
+        upi_payment_uri=upi_payment_uri,
+        upi_qr_data=upi_qr_data,
+    )
+
+
+@app.route('/download_qr/<int:sr_no>')
+def download_qr(sr_no):
+    conn, c = get_db()
+    c.execute('SELECT * FROM users WHERE sr_no = ?', (sr_no,))
+    user = c.fetchone()
+    c.execute('SELECT upi_id FROM admins LIMIT 1')
+    admin = c.fetchone()
+    conn.close()
+    if not user:
+        return "User not found", 404
+    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['akud_dey_rakam'])
+    if not upi_payment_uri:
+        return "QR not configured", 404
+    buffer = qr_png_buffer(upi_payment_uri)
+    return send_file(
+        buffer,
+        mimetype='image/png',
+        as_attachment=True,
+        download_name=f"qr_{user['midkatkram']}.png",
+    )
 
 
 @app.route('/qr_code/<int:sr_no>')
@@ -517,7 +604,7 @@ def print_all_qr():
         b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
         user_dict['base64_img'] = f"data:image/png;base64,{b64}"
         return user_dict
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    with ThreadPoolExecutor(max_workers=50) as executor:
         users_with_imgs = list(executor.map(process_user_for_print, users))
     return render_template('print_all_qr.html', users=users_with_imgs)
 
@@ -657,26 +744,21 @@ def save_admin():
     admin_name    = request.form.get('admin_name', '').strip()
     admin_contact = request.form.get('admin_contact', '').strip()
     admin_email   = request.form.get('admin_email', '').strip()
-    upi_qr_file   = request.files.get('upi_qr')
+    upi_id        = request.form.get('upi_id', '').strip()
     conn, c = get_db()
     c.execute('SELECT id FROM admins LIMIT 1')
     existing = c.fetchone()
     try:
         if existing:
             c.execute(
-                'UPDATE admins SET gp_name=?, admin_name=?, admin_contact=?, admin_email=? WHERE id=?',
-                (gp_name, admin_name, admin_contact, admin_email, existing['id'])
+                'UPDATE admins SET gp_name=?, admin_name=?, admin_contact=?, admin_email=?, upi_id=? WHERE id=?',
+                (gp_name, admin_name, admin_contact, admin_email, upi_id, existing['id'])
             )
         else:
             c.execute(
-                'INSERT INTO admins (gp_name, admin_name, admin_contact, admin_email, admin_password) VALUES (?, ?, ?, ?, ?)',
-                (gp_name, admin_name, admin_contact, admin_email, 'changeme')
+                'INSERT INTO admins (gp_name, admin_name, admin_contact, admin_email, admin_password, upi_id) VALUES (?, ?, ?, ?, ?, ?)',
+                (gp_name, admin_name, admin_contact, admin_email, 'changeme', upi_id)
             )
-        if upi_qr_file and upi_qr_file.filename:
-            qr_path = os.path.join(app.static_folder, UPI_QR_FILENAME)
-            os.makedirs(app.static_folder, exist_ok=True)
-            with Image.open(upi_qr_file.stream) as qr_image:
-                qr_image.convert('RGBA').save(qr_path, format='PNG')
         conn.commit()
         load_gp_name()
         session['admin_name'] = admin_name
