@@ -777,8 +777,7 @@
 
     <script>
       // Static field map injected from server (small, non-user data)
-      const FIELDS = {{ fields | tojson }};
-      const FIELD_ENTRIES = Object.entries(FIELDS);
+      const FIELD_ENTRIES = {{ fields.items() | list | tojson }};
       const FIELD_COUNT = FIELD_ENTRIES.length;
 
       // ── DOM refs ──────────────────────────────────────────────
