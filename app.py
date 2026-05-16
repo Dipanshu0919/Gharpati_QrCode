@@ -8,7 +8,7 @@ import sqlite3
 import re
 import zipfile
 from decimal import Decimal, InvalidOperation
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from functools import wraps
 from PIL import Image, ImageDraw, ImageFont
 from flask import Flask, render_template, request, redirect, url_for, send_file, session, flash, jsonify
@@ -36,6 +36,11 @@ def load_gp_name():
             GP_NAME = row['gp_name']
     except Exception:
         pass
+
+def _worker_init():
+    """Load GP_NAME in each worker process so QR cards show correct name."""
+    load_gp_name()
+
 
 fields = {
     "midkatkram": "मिळकत क्र",
@@ -609,6 +614,12 @@ def qr_code(sr_no):
     return send_file(buffer, mimetype='image/png', as_attachment=True, download_name=f'qr_{user["midkatkram"]}.png')
 
 
+def process_user_for_zip(task):
+    user_dict, base_url = task
+    buf = generate_qr_card_image(user_dict, base_url=base_url)
+    return user_dict["midkatkram"], buf.getvalue()
+
+
 @app.route('/generate_all_qr')
 @login_required
 def generate_all_qr():
@@ -617,14 +628,12 @@ def generate_all_qr():
     users = [dict(row) for row in c.fetchall()]
     conn.close()
     base_url = request.host_url
+    tasks = [(user, base_url) for user in users]
     output = io.BytesIO()
     zipf = zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED)
-    def process_user(user_dict):
-        buf = generate_qr_card_image(user_dict, base_url=base_url)
-        return user_dict["midkatkram"], buf.getvalue()
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        results = executor.map(process_user, users)
-        for midkatkram, img_data in results:
+    workers = min(os.cpu_count() * 2, 16)
+    with ProcessPoolExecutor(max_workers=workers, initializer=_worker_init) as executor:
+        for midkatkram, img_data in executor.map(process_user_for_zip, tasks):
             zipf.writestr(f'qr_{midkatkram}.png', img_data)
     zipf.close()
     output.seek(0)
@@ -643,9 +652,6 @@ def qr_card_img(sr_no):
     return send_file(buffer, mimetype='image/png')
 
 
-from concurrent.futures import ThreadPoolExecutor
-import base64
-import os
 
 def generate_qr_code_only(sr_no, base_url):
     """Generate only the QR code image (not the full card)"""
@@ -698,7 +704,8 @@ def print_all_qr():
         for i, user in enumerate(users, start=1)
     ]
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    workers = min(os.cpu_count() * 2, 16)
+    with ProcessPoolExecutor(max_workers=workers, initializer=_worker_init) as executor:
         users_with_qrs = list(executor.map(process_user_for_print, tasks))
 
     return render_template(
@@ -785,19 +792,40 @@ def reports():
 
 
 @app.route('/dashboard')
+@app.route('/dashboard/<int:page>')
 @login_required
-def dashboard():
-    return render_template('dashboard.html')
+def dashboard(page=1):
+    return render_template('dashboard.html', initial_page=page)
 
 
 @app.route('/api/users')
 @login_required
 def api_users():
+    page  = max(1, int(request.args.get('page', 1)))
+    limit = 300
+    offset = (page - 1) * limit
+    q = request.args.get('q', '').strip()
     conn, c = get_db()
-    c.execute('SELECT * FROM users')
+    search_fields = [
+        'midkatkram', 'malkachenaab', 'gharpati_magil', 'gharpati_chalu', 'gharpati_akun',
+        'divabatti_magil', 'divabatti_chalu', 'divabatti_akun',
+        'arogya_magil', 'arogya_chalu', 'arogya_akun',
+        'panipati_magil', 'panipati_chalu', 'panipati_akun', 'akud_dey_rakam'
+    ]
+    if q:
+        like = f'%{q}%'
+        where = ' OR '.join([f'{f} LIKE ?' for f in search_fields])
+        params = [like] * len(search_fields)
+        c.execute(f'SELECT COUNT(*) FROM users WHERE {where}', params)
+        total = c.fetchone()[0]
+        c.execute(f'SELECT * FROM users WHERE {where} LIMIT ? OFFSET ?', params + [limit, offset])
+    else:
+        c.execute('SELECT COUNT(*) FROM users')
+        total = c.fetchone()[0]
+        c.execute('SELECT * FROM users LIMIT ? OFFSET ?', (limit, offset))
     users = [dict(row) for row in c.fetchall()]
     conn.close()
-    return jsonify(users)
+    return jsonify({'users': users, 'total': total, 'page': page, 'limit': limit, 'q': q})
 
 
 @app.route('/delete_all_records', methods=['POST'])

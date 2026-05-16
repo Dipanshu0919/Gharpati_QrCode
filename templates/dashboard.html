@@ -752,10 +752,12 @@
         <div id="empty-msg" class="empty" style="display:none;">No records available.</div>
         <div id="loading-msg" class="empty">Loading records...</div>
         <div id="table-section" style="display:none;">
-          <div style="margin-bottom: 14px;">
-            <input type="text" id="table-search" class="value" placeholder="Search records..."
-              style="max-width: 300px; text-align: left;">
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+            <input type="text" id="table-search" class="value" placeholder="Search all records..."
+              style="max-width:280px;text-align:left;">
+            <span id="search-status" style="font-size:13px;color:var(--muted);display:none;">Searching...</span>
           </div>
+          <div id="pagination-top" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;"></div>
           <div class="table-wrap">
             <table>
               <thead>
@@ -899,19 +901,81 @@
         bindEditButtons();
       }
 
+      // ── Pagination + search state ─────────────────────────────
+      let currentPage = {{ initial_page }};
+      let currentQuery = '';
+      let searchDebounce = null;
+      const LIMIT = 300;
+
+      // ── Pagination bar HTML builder ───────────────────────────
+      function paginationHTML(total, page) {
+        const totalPages = Math.ceil(total / LIMIT);
+        if (totalPages <= 1) return '';
+        const qParam = currentQuery ? `&q=${encodeURIComponent(currentQuery)}` : '';
+        const info = `<span style="font-size:14px;color:var(--muted);">Page <strong>${page}</strong> of <strong>${totalPages}</strong> &nbsp;·&nbsp; ${total} records</span>`;
+        const prev = page > 1
+          ? `<button onclick="goToPage(${page-1})" style="padding:6px 14px;border:1px solid #dfe4ec;border-radius:6px;background:#fff;cursor:pointer;font-weight:700;">&#8592; Prev</button>`
+          : `<button disabled style="padding:6px 14px;border:1px solid #dfe4ec;border-radius:6px;background:#f0f0f0;color:#aaa;cursor:default;font-weight:700;">&#8592; Prev</button>`;
+        const next = page < totalPages
+          ? `<button onclick="goToPage(${page+1})" style="padding:6px 14px;border:0;border-radius:6px;background:#1f4b99;color:#fff;cursor:pointer;font-weight:700;">Next &#8594;</button>`
+          : `<button disabled style="padding:6px 14px;border:0;border-radius:6px;background:#a0b4d6;color:#fff;cursor:default;font-weight:700;">Next &#8594;</button>`;
+        return prev + info + next;
+      }
+
+      function renderPagination(total, page) {
+        const html = paginationHTML(total, page);
+        document.getElementById('pagination-top').innerHTML = html;
+        let bot = document.getElementById('pagination-bottom');
+        if (!bot) {
+          bot = document.createElement('div');
+          bot.id = 'pagination-bottom';
+          bot.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap;';
+          tableSection.insertAdjacentElement('afterend', bot);
+        }
+        bot.innerHTML = html;
+      }
+
+      function goToPage(page) {
+        currentPage = page;
+        const url = currentQuery
+          ? `/dashboard/${page}?q=${encodeURIComponent(currentQuery)}`
+          : `/dashboard/${page}`;
+        history.pushState({page, q: currentQuery}, '', url);
+        loadUsers(page, currentQuery);
+        window.scrollTo({top: 0, behavior: 'smooth'});
+      }
+
+      // Handle browser back/forward
+      window.addEventListener('popstate', (e) => {
+        if (e.state) {
+          currentPage = e.state.page || 1;
+          currentQuery = e.state.q || '';
+          document.getElementById('table-search').value = currentQuery;
+          loadUsers(currentPage, currentQuery);
+        }
+      });
+
       // ── Fetch users from API ──────────────────────────────────
-      async function loadUsers() {
+      async function loadUsers(page = 1, q = '') {
+        loadingMsg.style.display = '';
+        tableSection.style.display = 'none';
+        emptyMsg.style.display = 'none';
         try {
-          const res = await fetch('/api/users');
+          const params = new URLSearchParams({page});
+          if (q) params.set('q', q);
+          const res = await fetch(`/api/users?${params}`);
           if (!res.ok) throw new Error('Failed to load');
-          const users = await res.json();
-          renderUsers(users);
+          const data = await res.json();
+          renderUsers(data.users);
+          renderPagination(data.total, data.page);
         } catch (e) {
           loadingMsg.textContent = 'Failed to load records.';
         }
       }
 
-      loadUsers();
+      // Set initial URL cleanly
+      history.replaceState({page: currentPage, q: ''}, '', `/dashboard/${currentPage}`);
+      loadUsers(currentPage);
 
       // ── Bind edit/close buttons (called after render) ─────────
       function bindEditButtons() {
@@ -976,16 +1040,20 @@
         if (!e.target.closest('.dropdown')) closeAllDropdowns();
       });
 
-      // ── Table search ──────────────────────────────────────────
-      document.addEventListener('input', (e) => {
-        if (e.target.id !== 'table-search') return;
-        const query = e.target.value.toLowerCase().trim();
-        document.querySelectorAll('.record-row').forEach(row => {
-          const match = row.textContent.toLowerCase().includes(query);
-          row.style.display = match ? '' : 'none';
-          const next = row.nextElementSibling;
-          if (!match && next && next.classList.contains('edit-row')) next.classList.remove('open');
-        });
+      // ── Server-side search with debounce ─────────────────────
+      const searchStatus = document.getElementById('search-status');
+      document.getElementById('table-search').addEventListener('input', (e) => {
+        const q = e.target.value.trim();
+        clearTimeout(searchDebounce);
+        if (q === currentQuery) return;
+        searchStatus.style.display = '';
+        searchDebounce = setTimeout(() => {
+          currentQuery = q;
+          currentPage = 1;
+          const url = q ? `/dashboard/1?q=${encodeURIComponent(q)}` : '/dashboard/1';
+          history.pushState({page: 1, q}, '', url);
+          loadUsers(1, q).then(() => { searchStatus.style.display = 'none'; });
+        }, 350);
       });
     </script>
 </body>
