@@ -11,7 +11,7 @@ from decimal import Decimal, InvalidOperation
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 from PIL import Image, ImageDraw, ImageFont
-from flask import Flask, render_template, request, redirect, url_for, send_file, session, flash
+from flask import Flask, render_template, request, redirect, url_for, send_file, session, flash, jsonify
 from urllib.parse import quote
 
 
@@ -143,27 +143,65 @@ def insert_users(rows):
     conn.commit()
     conn.close()
 
+def to_amount(value):
+    try:
+        text = str(value).strip().replace(',', '')
+        return Decimal(text) if text else Decimal('0')
+    except (InvalidOperation, ValueError, TypeError):
+        return Decimal('0')
+
 def has_marathi(text):
     return bool(re.search(r'[\u0900-\u097F]', str(text)))
 
+import os
+import platform
+from PIL import ImageFont
+
 def get_font(size=24, text=None):
-    if text is not None and not has_marathi(text):
-        font_files = [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-            "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
-        ]
+
+    is_windows = platform.system() == "Windows"
+
+    if is_windows:
+
+        # Windows font paths
+        if text is not None and not has_marathi(text):
+            font_files = [
+                "C:/Windows/Fonts/arial.ttf",
+                "C:/Windows/Fonts/calibri.ttf",
+                "C:/Windows/Fonts/segoeui.ttf",
+                "C:/Windows/Fonts/Nirmala.ttf",  # Marathi support
+            ]
+        else:
+            font_files = [
+                "C:/Windows/Fonts/Nirmala.ttf",  # Best for Marathi
+                "C:/Windows/Fonts/mangal.ttf",
+                "C:/Windows/Fonts/arial.ttf",
+                "C:/Windows/Fonts/segoeui.ttf",
+            ]
+
     else:
-        font_files = [
-            "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-        ]
+
+        # Linux font paths
+        if text is not None and not has_marathi(text):
+            font_files = [
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
+            ]
+        else:
+            font_files = [
+                "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+            ]
+
     for path in font_files:
         try:
-            return ImageFont.truetype(path, size)
+            if os.path.exists(path):
+                return ImageFont.truetype(path, size)
         except Exception:
             continue
+
     return ImageFont.load_default()
 
 def draw_multilingual_text(draw, x, y, text, fill, size):
@@ -374,6 +412,7 @@ def generate_qr_card_image(user, base_url=None):
     output = io.BytesIO()
     background.save(output, format='PNG')
     output.seek(0)
+    print("Generated")
     return output
 
 
@@ -469,7 +508,20 @@ def add_user_csv():
     if not content.strip():
         return redirect(url_for('dashboard'))
     reader = csv.DictReader(io.StringIO(content))
-    rows = [{key: row.get(key, '') for key in fields} for row in reader]
+    rows = []
+    for row in reader:
+        normalized_row = {key: row.get(key, '') for key in fields}
+        total_value = row.get('akud_dey_rakam', '') or row.get('akun_dey_rakam', '')
+        if not str(total_value).strip():
+            total = (
+                to_amount(row.get('arogya_akun')) +
+                to_amount(row.get('panipati_akun')) +
+                to_amount(row.get('gharpati_akun')) +
+                to_amount(row.get('divabatti_akun'))
+            )
+            total_value = str(total)
+        normalized_row['akud_dey_rakam'] = total_value
+        rows.append(normalized_row)
     insert_users(rows)
     return redirect(url_for('dashboard'))
 
@@ -591,23 +643,69 @@ def qr_card_img(sr_no):
     return send_file(buffer, mimetype='image/png')
 
 
+from concurrent.futures import ThreadPoolExecutor
+import base64
+import os
+
+def generate_qr_code_only(sr_no, base_url):
+    """Generate only the QR code image (not the full card)"""
+    if base_url:
+        qr_url = f"{base_url.rstrip('/')}/user/{sr_no}"
+    else:
+        qr_url = url_for('view_user', sr_no=sr_no, _external=True)
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        box_size=10,
+        border=2,
+    )
+    qr.add_data(qr_url)
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
+
+    buffer = io.BytesIO()
+    qr_img.save(buffer, format='PNG')
+    buffer.seek(0)
+    return buffer
+
+def process_user_for_print(data):
+    index, total_users, user_dict, base_url = data
+
+    buf = generate_qr_code_only(user_dict['sr_no'], base_url)
+
+    b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+
+    user_dict['qr_code_base64'] = f"data:image/png;base64,{b64}"
+
+    print(f"QR generated {index}/{total_users}")
+
+    return user_dict
+
 @app.route('/print_all_qr')
 @login_required
 def print_all_qr():
+
     conn, c = get_db()
     c.execute('SELECT * FROM users')
     users = [dict(row) for row in c.fetchall()]
     conn.close()
     base_url = request.host_url
-    def process_user_for_print(user_dict):
-        buf = generate_qr_card_image(user_dict, base_url=base_url)
-        b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-        user_dict['base64_img'] = f"data:image/png;base64,{b64}"
-        return user_dict
-    with ThreadPoolExecutor(max_workers=50) as executor:
-        users_with_imgs = list(executor.map(process_user_for_print, users))
-    return render_template('print_all_qr.html', users=users_with_imgs)
+    total_users = len(users)
+    
+    tasks = [
+        (i, total_users, user, base_url)
+        for i, user in enumerate(users, start=1)
+    ]
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        users_with_qrs = list(executor.map(process_user_for_print, tasks))
+
+    return render_template(
+        'print_all_qr.html',
+        users=users_with_qrs,
+        gp_name=GP_NAME
+    )
 
 @app.route('/generateqr')
 @login_required
@@ -689,13 +787,17 @@ def reports():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    return render_template('dashboard.html')
+
+
+@app.route('/api/users')
+@login_required
+def api_users():
     conn, c = get_db()
     c.execute('SELECT * FROM users')
-    users = c.fetchall()
+    users = [dict(row) for row in c.fetchall()]
     conn.close()
-    if not users:
-        return render_template('dashboard.html', users=None)
-    return render_template('dashboard.html', users=users)
+    return jsonify(users)
 
 
 @app.route('/delete_all_records', methods=['POST'])

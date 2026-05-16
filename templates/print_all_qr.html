@@ -69,29 +69,103 @@
             gap: 10px;
             width: 100%;
             margin-bottom: 20px;
+        }
+
+        .qr-card {
             background: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 4px;
             padding: 12px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
-        .card-wrapper {
+        .card-header {
+            background: #1e3a8a;
+            color: #ffffff;
+            padding: 12px;
+            margin: -12px -12px 12px -12px;
+            text-align: center;
+            border-radius: 2px 2px 0 0;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .card-content {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px;
-            width: 100%;
-            height: 100%;
-            background: #f8fafc;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            gap: 12px;
         }
 
-        .card-img {
-            max-width: 100%;
-            height: auto;
-            object-fit: contain;
+        .qr-section {
+            flex-shrink: 0;
+        }
+
+        .qr-section img {
+            width: 120px;
+            height: 120px;
             display: block;
+            border: 1px solid #cbd5e1;
+        }
+
+        .details-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .detail-item {
+            margin-bottom: 8px;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .detail-value {
+            font-size: 13px;
+            color: #0f172a;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .card-instructions {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 2px;
+            padding: 8px;
+            margin-top: 12px;
+            font-size: 10px;
+            color: #431407;
+        }
+
+        .card-instructions-title {
+            font-weight: 700;
+            color: #c2410c;
+            margin-bottom: 4px;
+        }
+
+        .card-instructions-text {
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        .card-footer {
+            border-top: 1px solid #e2e8f0;
+            margin-top: 8px;
+            padding-top: 6px;
+            text-align: center;
+            font-size: 10px;
+            color: #1e3a8a;
+            font-weight: 600;
         }
 
         @media print {
@@ -117,41 +191,43 @@
             }
 
             .print-grid {
-                display: block;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4px;
                 width: 100%;
-                margin: 0;
-                padding: 0;
-                background: transparent;
-                border: none;
-                box-shadow: none;
+                margin-bottom: 0;
                 page-break-after: always;
                 break-after: page;
             }
 
-            .print-grid::after {
-                content: "";
-                display: table;
-                clear: both;
-            }
-
-            .card-wrapper {
-                float: left;
-                width: 33.33%;
-                padding: 1.5mm;
+            .qr-card {
+                padding: 8px;
                 margin: 0;
-                box-sizing: border-box;
-                background: transparent;
-                border: none;
-                border-radius: 0;
-                page-break-inside: avoid;
-                break-inside: avoid;
+                border: 1px solid #cbd5e1;
             }
 
-            .card-img {
-                max-width: 100%;
-                height: auto;
-                display: block;
-                margin: 0 auto;
+            .card-header {
+                padding: 6px;
+                margin: -8px -8px 6px -8px;
+                font-size: 12px;
+            }
+
+            .card-header h3 {
+                font-size: 11px;
+                margin: 0;
+            }
+
+            .qr-section img {
+                width: 100px;
+                height: 100px;
+            }
+
+            .card-instructions {
+                display: none;
+            }
+
+            .card-footer {
+                display: none;
             }
         }
     </style>
@@ -159,7 +235,7 @@
 
 <body>
     <div class="no-print">
-        <div style="font-size: 18px; font-weight: 700; color: #0f172a;">Print QR Code Cards (3x5 Grid)</div>
+        <div style="font-size: 18px; font-weight: 700; color: #0f172a;">Print QR Code Cards</div>
         <div style="display: flex; gap: 10px;">
             <button onclick="window.print()" class="btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -183,9 +259,40 @@
         {% set chunk = users[i:i+chunk_size] %}
         <div class="print-grid">
             {% for user in chunk %}
-            <div class="card-wrapper">
-                <img class="card-img" src="{{ user.base64_img }}"
-                    alt="QR Card Sr. {{ user.sr_no }}">
+            <div class="qr-card">
+                <div class="card-header">
+                    <h3>{{ gp_name }} - घरपट्टी माहिती</h3>
+                </div>
+
+                <div class="card-content">
+                    <div class="qr-section">
+                        <img src="{{ user.qr_code_base64 }}" alt="QR Code">
+                    </div>
+                    <div class="details-section">
+                        <div class="detail-item">
+                            <div class="detail-label">मालकाचे नाव :</div>
+                            <div class="detail-value">{{ user.malkachenaab or '-' }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">मालमत्ता क्र. :</div>
+                            <div class="detail-value">{{ user.midkatkram or '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-instructions">
+                    <div class="card-instructions-title">घरपट्टीची रक्कम QR कोडद्वारे भरण्याचे टप्पे :</div>
+                    <p class="card-instructions-text">
+                        - QR कोड स्कॅन करण्यासाठी Play Store किंवा App Store वरून कोणतेही<br>
+                        &nbsp;&nbsp;"QR Code Scanner" App डाउनलोड करा आणि उघडा आणि वरील QR कोड स्कॅन करा.<br>
+                        - स्कॅन केल्यावर आपल्याला एक लिंक दिसेल, त्यावर क्लिक करा.<br>
+                        - उपलब्ध UPI QR कोड स्कॅन करा आणि घरपट्टी ची रक्कम भरा !.
+                    </p>
+                </div>
+
+                <div class="card-footer">
+                    वेळेत कर भरा आणि गावचा विकास साधा
+                </div>
             </div>
             {% endfor %}
         </div>
