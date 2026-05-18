@@ -483,6 +483,44 @@
       width: 20%;
     }
 
+    .csv-sample-wrap {
+      margin: 0 0 16px;
+      overflow-x: auto;
+    }
+
+    .csv-sample {
+      width: 100%;
+      min-width: 1180px;
+      border-collapse: collapse;
+    }
+
+    .csv-sample th,
+    .csv-sample td {
+      padding: 8px 10px;
+      border: 1px solid #d6dbe3;
+      font-size: 13px;
+      text-align: center;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .csv-sample th {
+      position: sticky;
+      top: 0;
+      background: #2f5f9a;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .csv-sample tbody tr:nth-child(even) td {
+      background: #f8fbff;
+    }
+
+    .csv-sample .name-cell {
+      text-align: left;
+      white-space: normal;
+    }
+
     .csv-upload {
       margin: 0 0 16px;
       padding: 16px;
@@ -679,7 +717,7 @@
       </div>
 
       <div class="content">
-        {% set preserve_fields = ['midkatkram', 'malkachenaab'] %}
+        {% set preserve_fields = ['midkatkram', 'ghar_malkache_nav'] %}
         <div class="actions-row">
           <details class="actions">
             <summary>Add New Record</summary>
@@ -712,7 +750,118 @@
           <div class="csv-help-header">
             <h3 class="section-title" style="margin-bottom: 0;">CSV Format Guide</h3>
           </div>
-          <p class="csv-help-note">Use the exact header names shown below. Each row in the CSV becomes one record.</p>
+          <p class="csv-help-note">खाली दर्शवलेली अचूक हेडर नावे वापरा. ​​CSV मधील प्रत्येक ओळ एक रेकॉर्ड मानली जाईल.</p>
+          <h4 style="margin: 0 0 10px; font-size: 16px; color: #14213d;">Sample CSV Preview</h4>
+          <div class="csv-sample-wrap">
+            <table class="csv-sample">
+              <thead>
+                <tr>
+                  <th>midkatkram</th>
+                  <th>ghar_malkache_nav</th>
+                  <th>gharpatti_magil</th>
+                  <th>gharpatti_chalu</th>
+                  <th>gharpatti_ekun</th>
+                  <th>divabatti_magil</th>
+                  <th>divabatti_chalu</th>
+                  <th>divabatti_ekun</th>
+                  <th>arogya_magil</th>
+                  <th>arogya_chalu</th>
+                  <th>arogya_ekun</th>
+                  <th>panipatti_magil</th>
+                  <th>panipatti_chalu</th>
+                  <th>panipatti_ekun</th>
+                  <th>ekun_dene_rakkam</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>101</td>
+                  <td class="name-cell">राम पाटील</td>
+                  <td>1200</td>
+                  <td>600</td>
+                  <td>1800</td>
+                  <td>300</td>
+                  <td>150</td>
+                  <td>450</td>
+                  <td>200</td>
+                  <td>100</td>
+                  <td>300</td>
+                  <td>500</td>
+                  <td>250</td>
+                  <td>750</td>
+                  <td>3300</td>
+                </tr>
+                <tr>
+                  <td>102</td>
+                  <td class="name-cell">सीमा देशमुख</td>
+                  <td>1000</td>
+                  <td>400</td>
+                  <td>1400</td>
+                  <td>250</td>
+                  <td>250</td>
+                  <td>500</td>
+                  <td>180</td>
+                  <td>170</td>
+                  <td>350</td>
+                  <td>400</td>
+                  <td>200</td>
+                  <td>600</td>
+                  <td>2850</td>
+                </tr>
+                <tr>
+                  <td>103</td>
+                  <td class="name-cell">प्रवीण जाधव</td>
+                  <td>700</td>
+                  <td>200</td>
+                  <td>900</td>
+                  <td>150</td>
+                  <td>150</td>
+                  <td>300</td>
+                  <td>100</td>
+                  <td>150</td>
+                  <td>250</td>
+                  <td>300</td>
+                  <td>150</td>
+                  <td>450</td>
+                  <td>1900</td>
+                </tr>
+                <tr>
+                  <td>104</td>
+                  <td class="name-cell">Amit Sharma</td>
+                  <td>1100</td>
+                  <td>500</td>
+                  <td>1600</td>
+                  <td>220</td>
+                  <td>200</td>
+                  <td>420</td>
+                  <td>140</td>
+                  <td>140</td>
+                  <td>280</td>
+                  <td>500</td>
+                  <td>300</td>
+                  <td>800</td>
+                  <td>3100</td>
+                </tr>
+                <tr>
+                  <td>105</td>
+                  <td class="name-cell">Priya Verma</td>
+                  <td>900</td>
+                  <td>200</td>
+                  <td>1100</td>
+                  <td>180</td>
+                  <td>210</td>
+                  <td>390</td>
+                  <td>120</td>
+                  <td>140</td>
+                  <td>260</td>
+                  <td>450</td>
+                  <td>250</td>
+                  <td>700</td>
+                  <td>2450</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <div class="csv-upload">
             <form action="{{ url_for('add_user_csv') }}" method="post" enctype="multipart/form-data">
               <div class="field" style="max-width: 420px;">
@@ -722,13 +871,15 @@
                 style="padding: 0.65rem 1rem; border: 0; border-radius: 6px; background: #1f4b99; color: #fff; font-weight: 700; cursor: pointer;">Upload
                 CSV</button>
               <p class="hint">
-                CSV file should contain these exact headers: <code>midkatkram</code>, <code>malkachenaab</code>,
-                <code>gharpati_magil</code>, <code>gharpati_chalu</code>, <code>gharpati_akun</code>,
-                <code>divabatti_magil</code>, <code>divabatti_chalu</code>, <code>divabatti_akun</code>,
-                <code>arogya_magil</code>,<code>arogya_chalu</code>, <code>arogya_akun</code>,
-                <code>panipati_magil</code>, <code>panipati_chalu</code>, <code>panipati_akun</code>,
-                <code>akud_dey_rakam</code>.
+                CSV file should contain these exact headers: <code>midkatkram</code>, <code>ghar_malkache_nav</code>,
+                <code>gharpatti_magil</code>, <code>gharpatti_chalu</code>, <code>gharpatti_ekun</code>,
+                <code>divabatti_magil</code>, <code>divabatti_chalu</code>, <code>divabatti_ekun</code>,
+                <code>arogya_magil</code>,<code>arogya_chalu</code>, <code>arogya_ekun</code>,
+                <code>panipatti_magil</code>, <code>panipatti_chalu</code>, <code>panipatti_ekun</code>,
+                <code>ekun_dene_rakkam</code>.
               </p>
+              <a href="{{ url_for('download_sample_csv') }}" class="csv-toggle"
+                style="background:#0f8b59; text-decoration:none; margin-top: 6px;">Download Sample CSV</a>
             </form>
           </div>
           <table class="csv-fields">

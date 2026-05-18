@@ -484,7 +484,7 @@
         <div class="info-grid">
           <div class="info-field">
             <span class="info-field-label">मालकाचे नाव (Owner Name)</span>
-            <span class="info-field-value">{{ user['malkachenaab'] or '-' }}</span>
+            <span class="info-field-value">{{ user['ghar_malkache_nav'] or '-' }}</span>
           </div>
           <div class="info-field">
             <span class="info-field-label">मिळकत क्रमांक (Property ID)</span>
@@ -510,35 +510,35 @@
               <!-- House Tax -->
               <tr>
                 <td><strong>घरपट्टी</strong> (House Tax)</td>
-                <td class="num">₹ {{ user['gharpati_magil'] or '0' }}</td>
-                <td class="num">₹ {{ user['gharpati_chalu'] or '0' }}</td>
-                <td class="num"><strong>₹ {{ user['gharpati_akun'] or '0' }}</strong></td>
+                <td class="num">₹ {{ user['gharpatti_magil'] or '0' }}</td>
+                <td class="num">₹ {{ user['gharpatti_chalu'] or '0' }}</td>
+                <td class="num"><strong>₹ {{ user['gharpatti_ekun'] or '0' }}</strong></td>
               </tr>
               <!-- Lighting Tax -->
               <tr>
                 <td><strong>दिवाबत्ती</strong> (Lighting Tax)</td>
                 <td class="num">₹ {{ user['divabatti_magil'] or '0' }}</td>
                 <td class="num">₹ {{ user['divabatti_chalu'] or '0' }}</td>
-                <td class="num"><strong>₹ {{ user['divabatti_akun'] or '0' }}</strong></td>
+                <td class="num"><strong>₹ {{ user['divabatti_ekun'] or '0' }}</strong></td>
               </tr>
               <!-- Health Tax -->
               <tr>
                 <td><strong>आरोग्य कर</strong> (Health Tax)</td>
                 <td class="num">₹ {{ user['arogya_magil'] or '0' }}</td>
                 <td class="num">₹ {{ user['arogya_chalu'] or '0' }}</td>
-                <td class="num"><strong>₹ {{ user['arogya_akun'] or '0' }}</strong></td>
+                <td class="num"><strong>₹ {{ user['arogya_ekun'] or '0' }}</strong></td>
               </tr>
               <!-- Water Tax -->
               <tr>
                 <td><strong>पाणीपट्टी</strong> (Water Tax)</td>
-                <td class="num">₹ {{ user['panipati_magil'] or '0' }}</td>
-                <td class="num">₹ {{ user['panipati_chalu'] or '0' }}</td>
-                <td class="num"><strong>₹ {{ user['panipati_akun'] or '0' }}</strong></td>
+                <td class="num">₹ {{ user['panipatti_magil'] or '0' }}</td>
+                <td class="num">₹ {{ user['panipatti_chalu'] or '0' }}</td>
+                <td class="num"><strong>₹ {{ user['panipatti_ekun'] or '0' }}</strong></td>
               </tr>
               <!-- Grand Total -->
               <tr class="grand-total-row">
                 <td colspan="3">एकूण भरलेली रक्कम (Total Amount Paid)</td>
-                <td class="num">₹ {{ user['akud_dey_rakam'] or '0' }}</td>
+                <td class="num">₹ {{ user['ekun_dene_rakkam'] or '0' }}</td>
               </tr>
             </tbody>
           </table>

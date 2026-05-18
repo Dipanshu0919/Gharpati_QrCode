@@ -13,51 +13,60 @@ from functools import wraps
 from PIL import Image, ImageDraw, ImageFont
 from flask import Flask, render_template, request, redirect, url_for, send_file, session, flash, jsonify
 from urllib.parse import quote
+import uuid
+import threading
+import time
+import shutil
 
 
 app = Flask(__name__)
 app.secret_key = "replace-with-a-secure-key"
 app.config['SESSION_PERMANENT'] = False
 DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
+SAMPLE_CSV_PATH = os.path.join(os.path.dirname(__file__), "sample_users.csv")
 UPI_QR_FILENAME = "upiqr.png"
 
 GP_NAME = "ग्रामपंचायत"
+HELPLINE_NUMBER = ""
 
 def load_gp_name():
-    global GP_NAME
+    global GP_NAME, HELPLINE_NUMBER
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
-        c.execute('SELECT gp_name FROM admins LIMIT 1')
+        c.execute('SELECT gp_name, helpline_number FROM admins LIMIT 1')
         row = c.fetchone()
         conn.close()
-        if row and row['gp_name']:
-            GP_NAME = row['gp_name']
+        if row:
+            if row['gp_name']:
+                GP_NAME = row['gp_name']
+            if row['helpline_number']:
+                HELPLINE_NUMBER = row['helpline_number']
     except Exception:
         pass
 
 def _worker_init():
-    """Load GP_NAME in each worker process so QR cards show correct name."""
+    """Load GP_NAME and HELPLINE_NUMBER in each worker process so QR cards show correct name."""
     load_gp_name()
 
 
 fields = {
     "midkatkram": "मिळकत क्र",
-    "malkachenaab": "मालकाचे नाव",
-    "gharpati_magil": "घरपट्टी (मागील)",
-    "gharpati_chalu": "घरपट्टी (चालू)",
-    "gharpati_akun": "घरपट्टी (एकूण)",
+    "ghar_malkache_nav": "मालकाचे नाव",
+    "gharpatti_magil": "घरपट्टी (मागील)",
+    "gharpatti_chalu": "घरपट्टी (चालू)",
+    "gharpatti_ekun": "घरपट्टी (एकूण)",
     "divabatti_magil": "दिवाबत्ती (मागील)",
     "divabatti_chalu": "दिवाबत्ती (चालू)",
-    "divabatti_akun": "दिवाबत्ती (एकूण)",
+    "divabatti_ekun": "दिवाबत्ती (एकूण)",
     "arogya_magil": "आरोग्य (मागील)",
     "arogya_chalu": "आरोग्य (चालू)",
-    "arogya_akun": "आरोग्य (एकूण)",
-    "panipati_magil": "पाणीपट्टी (मागील)",
-    "panipati_chalu": "पाणीपट्टी (चालू)",
-    "panipati_akun": "पाणीपट्टी (एकूण)",
-    "akud_dey_rakam": "एकूण येणे रक्कम",
+    "arogya_ekun": "आरोग्य (एकूण)",
+    "panipatti_magil": "पाणीपट्टी (मागील)",
+    "panipatti_chalu": "पाणीपट्टी (चालू)",
+    "panipatti_ekun": "पाणीपट्टी (एकूण)",
+    "ekun_dene_rakkam": "एकूण येणे रक्कम",
 }
 
 @app.context_processor
@@ -65,6 +74,7 @@ def inject_globals():
     return {
         "fields": fields,
         "gp_name": GP_NAME,
+        "helpline_number": HELPLINE_NUMBER,
     }
 
 def login_required(f):
@@ -87,20 +97,20 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             sr_no INTEGER PRIMARY KEY AUTOINCREMENT,
             midkatkram TEXT,
-            malkachenaab TEXT,
-            gharpati_magil TEXT,
-            gharpati_chalu TEXT,
-            gharpati_akun TEXT,
+            ghar_malkache_nav TEXT,
+            gharpatti_magil TEXT,
+            gharpatti_chalu TEXT,
+            gharpatti_ekun TEXT,
             divabatti_magil TEXT,
             divabatti_chalu TEXT,
-            divabatti_akun TEXT,
+            divabatti_ekun TEXT,
             arogya_magil TEXT,
             arogya_chalu TEXT,
-            arogya_akun TEXT,
-            panipati_magil TEXT,
-            panipati_chalu TEXT,
-            panipati_akun TEXT,
-            akud_dey_rakam TEXT,
+            arogya_ekun TEXT,
+            panipatti_magil TEXT,
+            panipatti_chalu TEXT,
+            panipatti_ekun TEXT,
+            ekun_dene_rakkam TEXT,
             payment_ss TEXT DEFAULT NULL,
             payment_status TEXT DEFAULT "Pending"
         )
@@ -114,9 +124,15 @@ def init_db():
             admin_email TEXT NOT NULL UNIQUE,
             admin_password TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            upi_id TEXT DEFAULT NULL
+            upi_id TEXT DEFAULT NULL,
+            helpline_number TEXT DEFAULT NULL
         )
     ''')
+    # Migration: add helpline_number if missing
+    try:
+        c.execute('ALTER TABLE admins ADD COLUMN helpline_number TEXT DEFAULT NULL')
+    except Exception:
+        pass
 
     conn.commit()
     conn.close()
@@ -321,6 +337,10 @@ def qr_data_url(payload):
     if not payload:
         return None
     buffer = qr_png_buffer(payload)
+    return image_buffer_to_data_url(buffer)
+
+
+def image_buffer_to_data_url(buffer):
     return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
 
 
@@ -338,6 +358,97 @@ def qr_png_buffer(payload):
     qr_img.save(buffer, format='PNG')
     buffer.seek(0)
     return buffer
+
+
+def draw_app_badges(draw, x, y, badges):
+    gap = 12
+    badge_h = 44
+    current_x = x
+    for badge in badges:
+        label = badge["label"]
+        short = badge["short"]
+        fill = badge["fill"]
+        text_color = badge.get("text_color", "#ffffff")
+        label_w = get_multilingual_text_width(draw, label, 18)
+        short_w = get_multilingual_text_width(draw, short, 16)
+        badge_w = 20 + 34 + 10 + max(label_w, short_w) + 20
+        draw.rounded_rectangle(
+            [current_x, y, current_x + badge_w, y + badge_h],
+            radius=22,
+            fill=fill,
+            outline=fill
+        )
+        draw.ellipse([current_x + 10, y + 8, current_x + 34, y + 32], fill="#ffffff")
+        draw_multilingual_text(draw, current_x + 16, y + 10, short, fill, 16)
+        draw_multilingual_text(draw, current_x + 48, y + 12, label, text_color, 18)
+        current_x += badge_w + gap
+
+
+def generate_upi_qr_card_image(user, upi_payment_uri):
+    user_dict = dict(user)
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        box_size=10,
+        border=2,
+    )
+    qr.add_data(upi_payment_uri)
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
+    qr_img = qr_img.resize((420, 420), Image.Resampling.LANCZOS)
+
+    width = 900
+    height = 900
+    background = Image.new('RGB', (width, height), '#ffffff')
+    draw = ImageDraw.Draw(background)
+
+    draw.rectangle([0, 0, width, height], fill='#ffffff')
+    draw.rectangle([0, 0, width - 1, height - 1], outline='#cbd5e1', width=3)
+    draw.rectangle([0, 0, width, 120], fill='#1e3a8a')
+
+    draw_fitted_title(draw, GP_NAME, width, 65, '#ffffff')
+    subtitle = "UPI पेमेंट QR"
+    subtitle_w = get_multilingual_text_width(draw, subtitle, 24)
+    draw_multilingual_text(draw, (width - subtitle_w) // 2, 72, subtitle, '#dbeafe', 24)
+
+    qr_x = (width - 360) // 2 - 25
+    qr_y = 153
+    background.paste(qr_img, (qr_x, qr_y))
+
+    badges = [
+        {"label": "PhonePe", "short": "P", "fill": "#5f259f"},
+        {"label": "Google Pay", "short": "G", "fill": "#1a73e8"},
+        {"label": "Paytm", "short": "P", "fill": "#00baf2"},
+        {"label": "BHIM", "short": "B", "fill": "#0f6bff"},
+    ]
+    badge_x = qr_x + 430
+    badge_y = qr_y - -50
+    for badge in badges:
+        draw_app_badges(draw, badge_x, badge_y, [badge])
+        badge_y += 60
+
+    draw.rounded_rectangle([60, 600, width - 60, 710], radius=24, fill='#eff6ff', outline='#bfdbfe', width=2)
+    owner_label = "घर मालकाचे नाव"
+    owner_label_w = get_multilingual_text_width(draw, owner_label, 24)
+    draw_multilingual_text(draw, (width - owner_label_w) // 2, 610, owner_label, '#1d4ed8', 24)
+    owner_name = user_dict.get('ghar_malkache_nav') or '-'
+    owner_name_w = get_multilingual_text_width(draw, owner_name, 32)
+    draw_multilingual_text(draw, (width - owner_name_w) // 2, 640, owner_name, '#0f172a', 32)
+
+    prop_no = f"मालमत्ता क्र. {user_dict.get('midkatkram') or '-'}"
+    prop_no_w = get_multilingual_text_width(draw, prop_no, 22)
+    draw_multilingual_text(draw, (width - prop_no_w) // 2, 675, prop_no, '#475569', 22)
+
+    footer_text = 'वेळेत कर भरा आणि गावचा विकास साधा'
+    if HELPLINE_NUMBER:
+        footer_text += f'  |  हेल्पलाइन: {HELPLINE_NUMBER}'
+    footer_w = get_multilingual_text_width(draw, footer_text, 20)
+    draw_multilingual_text(draw, (width - footer_w) // 2, 750, footer_text, '#1e3a8a', 20)
+
+    output = io.BytesIO()
+    background.save(output, format='PNG')
+    output.seek(0)
+    return output
 
 
 def generate_qr_card_image(user, base_url=None):
@@ -379,7 +490,7 @@ def generate_qr_card_image(user, base_url=None):
     detail_y = 160
 
     entries = [
-        ('मालकाचे नाव', user['malkachenaab'] or '-'),
+        ('मालकाचे नाव', user['ghar_malkache_nav'] or '-'),
         ('मालमत्ता क्र.', user['midkatkram'] or '-'),
     ]
 
@@ -411,13 +522,14 @@ def generate_qr_card_image(user, base_url=None):
     draw.line([0, height - 60, width, height - 60], fill='#e2e8f0', width=2)
 
     footer_text = 'वेळेत कर भरा आणि गावचा विकास साधा'
-    footer_w = get_multilingual_text_width(draw, footer_text, 24)
-    draw_multilingual_text(draw, (width - footer_w) // 2, height - 42, footer_text, '#1e3a8a', 24)
+    if HELPLINE_NUMBER:
+        footer_text += f'  |  हेल्पलाइन: {HELPLINE_NUMBER}'
+    footer_w = get_multilingual_text_width(draw, footer_text, 22)
+    draw_multilingual_text(draw, (width - footer_w) // 2, height - 42, footer_text, '#1e3a8a', 22)
 
     output = io.BytesIO()
     background.save(output, format='PNG')
     output.seek(0)
-    print("Generated")
     return output
 
 
@@ -516,19 +628,30 @@ def add_user_csv():
     rows = []
     for row in reader:
         normalized_row = {key: row.get(key, '') for key in fields}
-        total_value = row.get('akud_dey_rakam', '') or row.get('akun_dey_rakam', '')
+        total_value = row.get('ekun_dene_rakkam', '') or row.get('ekun_dey_rakam', '')
         if not str(total_value).strip():
             total = (
-                to_amount(row.get('arogya_akun')) +
-                to_amount(row.get('panipati_akun')) +
-                to_amount(row.get('gharpati_akun')) +
-                to_amount(row.get('divabatti_akun'))
+                to_amount(row.get('arogya_ekun')) +
+                to_amount(row.get('panipatti_ekun')) +
+                to_amount(row.get('gharpatti_ekun')) +
+                to_amount(row.get('divabatti_ekun'))
             )
             total_value = str(total)
-        normalized_row['akud_dey_rakam'] = total_value
+        normalized_row['ekun_dene_rakkam'] = total_value
         rows.append(normalized_row)
     insert_users(rows)
     return redirect(url_for('dashboard'))
+
+
+@app.route('/download_sample_csv')
+@login_required
+def download_sample_csv():
+    return send_file(
+        SAMPLE_CSV_PATH,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='sample_users.csv',
+    )
 
 
 @app.route('/edit_user/<int:sr_no>', methods=['POST'])
@@ -569,8 +692,10 @@ def view_user(sr_no):
     if not user:
         return "User not found", 404
     session["current_user"] = user["sr_no"]
-    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['akud_dey_rakam'])
-    upi_qr_data = qr_data_url(upi_payment_uri)
+    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['ekun_dene_rakkam'])
+    upi_qr_data = None
+    if upi_payment_uri:
+        upi_qr_data = image_buffer_to_data_url(generate_upi_qr_card_image(user, upi_payment_uri))
     return render_template(
         'view_user.html',
         user=user,
@@ -589,10 +714,10 @@ def download_qr(sr_no):
     conn.close()
     if not user:
         return "User not found", 404
-    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['akud_dey_rakam'])
+    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['ekun_dene_rakkam'])
     if not upi_payment_uri:
         return "QR not configured", 404
-    buffer = qr_png_buffer(upi_payment_uri)
+    buffer = generate_upi_qr_card_image(user, upi_payment_uri)
     return send_file(
         buffer,
         mimetype='image/png',
@@ -614,10 +739,26 @@ def qr_code(sr_no):
     return send_file(buffer, mimetype='image/png', as_attachment=True, download_name=f'qr_{user["midkatkram"]}.png')
 
 
+def cleanup_zip_folder(folder_path, zip_path):
+    time.sleep(120)  # Wait 2 minutes
+    try:
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+    except Exception as e:
+        print(f"Cleanup error: {e}")
+
 def process_user_for_zip(task):
-    user_dict, base_url = task
+    index, total, user_dict, base_url, folder_path = task
     buf = generate_qr_card_image(user_dict, base_url=base_url)
-    return user_dict["midkatkram"], buf.getvalue()
+    safe_name = str(user_dict["midkatkram"]).replace('/', '_').replace('\\', '_')
+    filename = f'qr_{safe_name}.png'
+    filepath = os.path.join(folder_path, filename)
+    with open(filepath, 'wb') as f:
+        f.write(buf.getvalue())
+    print(f"QR generated {index}/{total}")
+    return filepath
 
 
 @app.route('/generate_all_qr')
@@ -627,17 +768,31 @@ def generate_all_qr():
     c.execute('SELECT * FROM users')
     users = [dict(row) for row in c.fetchall()]
     conn.close()
+    
+    req_id = str(uuid.uuid4())
+    base_dir = os.path.join(os.path.dirname(__file__), "static", "allqrs")
+    folder_path = os.path.join(base_dir, req_id)
+    os.makedirs(folder_path, exist_ok=True)
+    
+    zip_path = os.path.join(base_dir, f"{req_id}.zip")
+
     base_url = request.host_url
-    tasks = [(user, base_url) for user in users]
-    output = io.BytesIO()
-    zipf = zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED)
+    total_users = len(users)
+    tasks = [(i, total_users, user, base_url, folder_path) for i, user in enumerate(users, start=1)]
+    
     workers = min(os.cpu_count() * 2, 16)
     with ProcessPoolExecutor(max_workers=workers, initializer=_worker_init) as executor:
-        for midkatkram, img_data in executor.map(process_user_for_zip, tasks):
-            zipf.writestr(f'qr_{midkatkram}.png', img_data)
-    zipf.close()
-    output.seek(0)
-    return send_file(output, mimetype='application/zip', as_attachment=True, download_name='qr_codes.zip')
+        list(executor.map(process_user_for_zip, tasks))
+        
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                zipf.write(file_path, file)
+                
+    threading.Thread(target=cleanup_zip_folder, args=(folder_path, zip_path), daemon=True).start()
+    
+    return send_file(zip_path, mimetype='application/zip', as_attachment=True, download_name='qr_codes.zip')
 
 
 @app.route('/qr_card_img/<int:sr_no>')
@@ -711,7 +866,8 @@ def print_all_qr():
     return render_template(
         'print_all_qr.html',
         users=users_with_qrs,
-        gp_name=GP_NAME
+        gp_name=GP_NAME,
+        helpline_number=HELPLINE_NUMBER
     )
 
 @app.route('/generateqr')
@@ -807,10 +963,10 @@ def api_users():
     q = request.args.get('q', '').strip()
     conn, c = get_db()
     search_fields = [
-        'midkatkram', 'malkachenaab', 'gharpati_magil', 'gharpati_chalu', 'gharpati_akun',
-        'divabatti_magil', 'divabatti_chalu', 'divabatti_akun',
-        'arogya_magil', 'arogya_chalu', 'arogya_akun',
-        'panipati_magil', 'panipati_chalu', 'panipati_akun', 'akud_dey_rakam'
+        'midkatkram', 'ghar_malkache_nav', 'gharpatti_magil', 'gharpatti_chalu', 'gharpatti_ekun',
+        'divabatti_magil', 'divabatti_chalu', 'divabatti_ekun',
+        'arogya_magil', 'arogya_chalu', 'arogya_ekun',
+        'panipatti_magil', 'panipatti_chalu', 'panipatti_ekun', 'ekun_dene_rakkam'
     ]
     if q:
         like = f'%{q}%'
@@ -870,24 +1026,25 @@ def admin_page():
 @app.route('/admin/save', methods=['POST'])
 @login_required
 def save_admin():
-    gp_name       = request.form.get('gp_name', '').strip()
-    admin_name    = request.form.get('admin_name', '').strip()
-    admin_contact = request.form.get('admin_contact', '').strip()
-    admin_email   = request.form.get('admin_email', '').strip()
-    upi_id        = request.form.get('upi_id', '').strip()
+    gp_name          = request.form.get('gp_name', '').strip()
+    admin_name       = request.form.get('admin_name', '').strip()
+    admin_contact    = request.form.get('admin_contact', '').strip()
+    admin_email      = request.form.get('admin_email', '').strip()
+    upi_id           = request.form.get('upi_id', '').strip()
+    helpline_number  = request.form.get('helpline_number', '').strip()
     conn, c = get_db()
     c.execute('SELECT id FROM admins LIMIT 1')
     existing = c.fetchone()
     try:
         if existing:
             c.execute(
-                'UPDATE admins SET gp_name=?, admin_name=?, admin_contact=?, admin_email=?, upi_id=? WHERE id=?',
-                (gp_name, admin_name, admin_contact, admin_email, upi_id, existing['id'])
+                'UPDATE admins SET gp_name=?, admin_name=?, admin_contact=?, admin_email=?, upi_id=?, helpline_number=? WHERE id=?',
+                (gp_name, admin_name, admin_contact, admin_email, upi_id, helpline_number, existing['id'])
             )
         else:
             c.execute(
-                'INSERT INTO admins (gp_name, admin_name, admin_contact, admin_email, admin_password, upi_id) VALUES (?, ?, ?, ?, ?, ?)',
-                (gp_name, admin_name, admin_contact, admin_email, 'changeme', upi_id)
+                'INSERT INTO admins (gp_name, admin_name, admin_contact, admin_email, admin_password, upi_id, helpline_number) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (gp_name, admin_name, admin_contact, admin_email, 'changeme', upi_id, helpline_number)
             )
         conn.commit()
         load_gp_name()

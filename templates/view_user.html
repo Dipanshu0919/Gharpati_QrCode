@@ -225,8 +225,8 @@
                 QR कोड डाउनलोड करा
               </a>
             </div>
-            <img src="{{ upi_qr_data }}" alt="UPI QR Code"
-              style="max-width: 240px; border-radius: 16px; border: 3px solid #dfe4ec; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <img src="{{ upi_qr_data }}" alt="UPI QR Card"
+              style="max-width: 360px; width: 100%; border-radius: 16px; border: 3px solid #dfe4ec; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
             {% else %}
             <div style="padding: 24px; border: 2px dashed #b7bcc7; border-radius: 16px; background: #fff; color: #5f697a;">
               UPI QR code not configured yet.
@@ -234,9 +234,15 @@
             {% endif %}
           </div>
           <p style="text-align: center;">
-            कृपया आपल्या मोबाईल मध्ये असलेला UPI App (GPay, PhonePe) उघडून, वरील QR Code स्कॅन करून घरपट्टी भरा.<br>
+            कृपया आपल्या मोबाईल मध्ये असलेला UPI App वापरून वरील QR Card स्कॅन करून घरपट्टी भरा.<br>
             पेमेंट झाल्या नंतर ग्रामपंचायत ला कळवा, किंव्हा खाली पेमेंटचा स्क्रीनशॉट अपलोड करा.
           </p>
+          <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin: 14px 0 6px;">
+            <span style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:#5f259f; color:#fff; font-size:13px; font-weight:700;">PhonePe</span>
+            <span style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:#1a73e8; color:#fff; font-size:13px; font-weight:700;">Google Pay</span>
+            <span style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:#00baf2; color:#fff; font-size:13px; font-weight:700;">Paytm</span>
+            <span style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:#0f6bff; color:#fff; font-size:13px; font-weight:700;">BHIM</span>
+          </div>
 
           {% if user['payment_ss'] %}
 

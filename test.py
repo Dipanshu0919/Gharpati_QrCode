@@ -17,7 +17,7 @@ conn = sqlite3.connect('users.db')
 conn.row_factory = sqlite3.Row
 cursor = conn.cursor()
 
-cursor.execute('UPDATE users SET akud_dey_rakam = gharpati_akun + divabatti_akun + arogya_akun')
+cursor.execute('UPDATE users SET akud_dey_rakam = gharpatti_ekun + divabatti_ekun + arogya_ekun')
 
 conn.commit()
 conn.close()
