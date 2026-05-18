@@ -675,6 +675,13 @@ def edit_user(sr_no):
 @login_required
 def delete_user(sr_no):
     conn, c = get_db()
+    c.execute('SELECT payment_ss FROM users WHERE sr_no = ?', (sr_no,))
+    user = c.fetchone()
+    if user and user['payment_ss'] and os.path.exists(user['payment_ss']):
+        try:
+            os.remove(user['payment_ss'])
+        except OSError:
+            pass
     c.execute('DELETE FROM users WHERE sr_no = ?', (sr_no,))
     conn.commit()
     conn.close()
