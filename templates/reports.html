@@ -116,6 +116,25 @@
       flex-wrap: wrap;
     }
 
+    .year-switcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .year-switcher select {
+      min-width: 150px;
+      height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      font-size: 15px;
+    }
+
     .tab-btn {
       display: inline-flex;
       align-items: center;
@@ -275,7 +294,7 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <nav>
-        <a href="{{ url_for('dashboard') }}" class="nav-item">
+        <a href="{{ url_for('dashboard', year=selected_year) if selected_year else url_for('dashboard') }}" class="nav-item">
           <span class="icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -285,7 +304,7 @@
           </span>
           <span class="nav-text" style="margin-left: 8px;">User</span>
         </a>
-        <a href="{{ url_for('reports') }}" class="nav-item active">
+        <a href="{{ url_for('reports', year=selected_year) if selected_year else url_for('reports') }}" class="nav-item active">
           <span class="icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -349,6 +368,14 @@
       </div>
 
       <div class="content">
+        <div class="year-switcher">
+          <label for="report-year-select">Select Year:</label>
+          <select id="report-year-select" aria-label="Select year">
+            {% for year in year_options %}
+            <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
         <!-- Tabs -->
         <div class="tabs">
@@ -393,7 +420,7 @@
                   {% endfor %}
                   <td>
                     <div class="actions-cell">
-                      <a href="{{ url_for('view_user', sr_no=user.sr_no) }}" target="_blank" class="btn btn-blue">View User</a>
+                      <a href="{{ url_for('view_user', sr_no=user.sr_no) }}?year={{ selected_year }}" target="_blank" class="btn btn-blue">View User</a>
                     </div>
                   </td>
                 </tr>
@@ -521,6 +548,16 @@
     const searchInput = document.getElementById('report-search');
     if (searchInput) {
       searchInput.addEventListener('input', e => filterRows(e.target.value.toLowerCase().trim()));
+    }
+
+    const yearSelect = document.getElementById('report-year-select');
+    if (yearSelect) {
+      yearSelect.addEventListener('change', (event) => {
+        const year = event.target.value;
+        const params = new URLSearchParams();
+        if (year) params.set('year', year);
+        window.location.href = `/reports${params.toString() ? `?${params.toString()}` : ''}`;
+      });
     }
   </script>
 </body>

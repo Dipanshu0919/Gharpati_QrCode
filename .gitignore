@@ -40,11 +40,17 @@ Thumbs.db
 
 # Application files
 users.db
+
+*.db
+
 static/qr_*.png
 
 घिवली 9घरपट्टी  new - Copy.csv
 ghivali.csv
 test.py
+
+
+admin.json
 
 static/qr_*.png
 static/user_payments/
