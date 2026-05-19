@@ -152,25 +152,6 @@
       background: #f8fbff;
     }
 
-    .year-switcher {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-
-    .year-switcher select {
-      min-width: 150px;
-      height: 38px;
-      padding: 0 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #fff;
-      font-size: 15px;
-      color: var(--text);
-    }
-
     .actions {
       width: 100%;
       max-width: 100%;
@@ -664,7 +645,7 @@
   <div class="page">
     <aside class="sidebar" id="sidebar">
       <nav>
-        <a href="{{ url_for('dashboard', year=selected_year) if selected_year else url_for('dashboard') }}" class="nav-item active">
+        <a href="{{ url_for('dashboard') }}" class="nav-item active">
           <span class="icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -674,7 +655,7 @@
           </span>
           <span class="nav-text" style="margin-left: 8px;">User</span>
         </a>
-        <a href="{{ url_for('reports', year=selected_year) if selected_year else url_for('reports') }}" class="nav-item">
+        <a href="{{ url_for('reports') }}" class="nav-item">
           <span class="icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -736,22 +717,12 @@
       </div>
 
       <div class="content">
-        <div class="year-switcher">
-          <label for="year-select">Select Year:</label>
-          <select id="year-select" aria-label="Select year">
-            {% for year in year_options %}
-            <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
-            {% endfor %}
-          </select>
-        </div>
         {% set preserve_fields = ['midkatkram', 'ghar_malkache_nav'] %}
         <div class="actions-row">
           <details class="actions">
             <summary>Add New Record</summary>
             <p class="hint">Fill in the details below to add a user.</p>
-            <p class="hint" style="font-weight:700;color:#1f4b99;">Active year: {{ selected_year }}</p>
             <form id="add-user-form">
-              <input type="hidden" name="year" value="{{ selected_year }}">
               <div class="grid">
                 {% for dbname, marathi in fields.items() %}
                 <div class="field">
@@ -771,7 +742,6 @@
           <button type="button" class="csv-toggle" id="csv-help-toggle">CSV Upload</button>
           <form action="{{ url_for('delete_all_records') }}" method="post" class="danger-form"
             onsubmit="return confirm('This will permanently delete all records and payment screenshots. Continue?');">
-            <input type="hidden" name="year" value="{{ selected_year }}">
             <button type="submit" class="danger-button">Delete All Records</button>
           </form>
         </div>
@@ -894,7 +864,6 @@
           </div>
           <div class="csv-upload">
             <form action="{{ url_for('add_user_csv') }}" method="post" enctype="multipart/form-data">
-              <input type="hidden" name="year" value="{{ selected_year }}">
               <div class="field" style="max-width: 420px;">
                 <input id="csv-file" class="small-input" type="file" name="file" accept=".csv,text/csv" required>
               </div>
@@ -963,7 +932,6 @@
       // Static field map injected from server (small, non-user data)
       const FIELD_ENTRIES = {{ fields.items() | list | tojson }};
       const FIELD_COUNT = FIELD_ENTRIES.length;
-      const selectedYear = "{{ selected_year }}";
 
       // ── DOM refs ──────────────────────────────────────────────
       const form       = document.getElementById('add-user-form');
@@ -1035,12 +1003,12 @@
                   </svg>
                 </button>
                 <div id="dropdown-${u.sr_no}" class="dropdown-menu">
-                  <a href="/qr_code/${u.sr_no}?year=${encodeURIComponent(selectedYear)}" class="dropdown-item" onclick="closeAllDropdowns()">
+                  <a href="/qr_code/${u.sr_no}" class="dropdown-item" onclick="closeAllDropdowns()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg> Download QR
                   </a>
-                  <a href="/user/${u.sr_no}?year=${encodeURIComponent(selectedYear)}" target="_blank" class="dropdown-item">
+                  <a href="/user/${u.sr_no}" target="_blank" class="dropdown-item">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                     </svg> View User
@@ -1053,7 +1021,6 @@
                   </button>
                   <form action="/delete_user/${u.sr_no}" method="post" style="margin:0;"
                     onsubmit="return confirm('Are you sure you want to delete this record?');">
-                    <input type="hidden" name="year" value="${selectedYear}">
                     <button type="submit" class="dropdown-item">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="3 6 5 6 21 6"></polyline>
@@ -1070,7 +1037,6 @@
               <div class="edit-panel">
                 <h3>Edit Record ( ${esc(u.midkatkram)} )</h3>
                 <form action="/edit_user/${u.sr_no}" method="post">
-                  <input type="hidden" name="year" value="" class="edit-year-input" />
                   <div class="edit-grid">${editInputs}</div>
                   <div class="edit-actions">
                     <button type="submit" class="btn btn-edit">Save Changes</button>
@@ -1083,9 +1049,6 @@
         }).join('');
 
         tbody.innerHTML = rows;
-        document.querySelectorAll('.edit-year-input').forEach((input) => {
-          input.value = selectedYear;
-        });
         bindEditButtons();
       }
 
@@ -1125,10 +1088,9 @@
 
       function goToPage(page) {
         currentPage = page;
-        const params = new URLSearchParams();
-        if (currentQuery) params.set('q', currentQuery);
-        if (selectedYear) params.set('year', selectedYear);
-        const url = `/dashboard/${page}${params.toString() ? `?${params.toString()}` : ''}`;
+        const url = currentQuery
+          ? `/dashboard/${page}?q=${encodeURIComponent(currentQuery)}`
+          : `/dashboard/${page}`;
         history.pushState({page, q: currentQuery}, '', url);
         loadUsers(page, currentQuery);
         window.scrollTo({top: 0, behavior: 'smooth'});
@@ -1152,7 +1114,6 @@
         try {
           const params = new URLSearchParams({page});
           if (q) params.set('q', q);
-          if (selectedYear) params.set('year', selectedYear);
           const res = await fetch(`/api/users?${params}`);
           if (!res.ok) throw new Error('Failed to load');
           const data = await res.json();
@@ -1164,19 +1125,8 @@
       }
 
       // Set initial URL cleanly
-      const initialParams = new URLSearchParams();
-      if (selectedYear) initialParams.set('year', selectedYear);
-      history.replaceState({page: currentPage, q: ''}, '', `/dashboard/${currentPage}${initialParams.toString() ? `?${initialParams.toString()}` : ''}`);
+      history.replaceState({page: currentPage, q: ''}, '', `/dashboard/${currentPage}`);
       loadUsers(currentPage);
-
-      document.getElementById('year-select')?.addEventListener('change', (event) => {
-        const year = event.target.value;
-        const params = new URLSearchParams();
-        if (currentQuery) params.set('q', currentQuery);
-        if (year) params.set('year', year);
-        history.pushState({page: 1, q: currentQuery}, '', `/dashboard/1${params.toString() ? `?${params.toString()}` : ''}`);
-        window.location.href = `/dashboard/1${params.toString() ? `?${params.toString()}` : ''}`;
-      });
 
       // ── Bind edit/close buttons (called after render) ─────────
       function bindEditButtons() {
@@ -1251,10 +1201,7 @@
         searchDebounce = setTimeout(() => {
           currentQuery = q;
           currentPage = 1;
-          const params = new URLSearchParams();
-          if (q) params.set('q', q);
-          if (selectedYear) params.set('year', selectedYear);
-          const url = `/dashboard/1${params.toString() ? `?${params.toString()}` : ''}`;
+          const url = q ? `/dashboard/1?q=${encodeURIComponent(q)}` : '/dashboard/1';
           history.pushState({page: 1, q}, '', url);
           loadUsers(1, q).then(() => { searchStatus.style.display = 'none'; });
         }, 350);

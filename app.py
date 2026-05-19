@@ -2,7 +2,6 @@ import base64
 import csv
 import datetime
 import io
-import json
 import os
 import qrcode
 import sqlite3
@@ -23,9 +22,8 @@ import shutil
 app = Flask(__name__)
 app.secret_key = "replace-with-a-secure-key"
 app.config['SESSION_PERMANENT'] = False
-ROOT_DIR = os.path.dirname(__file__)
-ADMIN_CONFIG_PATH = os.path.join(ROOT_DIR, "admin.json")
-SAMPLE_CSV_PATH = os.path.join(ROOT_DIR, "sample_users.csv")
+DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
+SAMPLE_CSV_PATH = os.path.join(os.path.dirname(__file__), "sample_users.csv")
 UPI_QR_FILENAME = "upiqr.png"
 
 GP_NAME = "ग्रामपंचायत"
@@ -33,13 +31,20 @@ HELPLINE_NUMBER = ""
 
 def load_gp_name():
     global GP_NAME, HELPLINE_NUMBER
-    data = get_admin_data()
-    if not data:
-        return
-    if data.get('gp_name'):
-        GP_NAME = data['gp_name']
-    if data.get('helpline_number'):
-        HELPLINE_NUMBER = data['helpline_number']
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('SELECT gp_name, helpline_number FROM admins LIMIT 1')
+        row = c.fetchone()
+        conn.close()
+        if row:
+            if row['gp_name']:
+                GP_NAME = row['gp_name']
+            if row['helpline_number']:
+                HELPLINE_NUMBER = row['helpline_number']
+    except Exception:
+        pass
 
 def _worker_init():
     """Load GP_NAME and HELPLINE_NUMBER in each worker process so QR cards show correct name."""
@@ -80,59 +85,14 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
-def get_academic_year_label(date_value=None):
-    if date_value is None:
-        date_value = datetime.date.today()
-    if date_value.month < 4:
-        start_year = date_value.year - 1
-    else:
-        start_year = date_value.year
-    end_year = start_year + 1
-    return f"{start_year}-{end_year}"
-
-
-def normalize_year_label(value):
-    if not value:
-        return get_academic_year_label()
-    text = str(value).strip()
-    if '-' in text:
-        parts = [p.strip() for p in text.split('-')]
-        if len(parts) == 2 and parts[0].isdigit():
-            if len(parts[0]) == 4 and len(parts[1]) == 4 and parts[1].isdigit():
-                return f"{parts[0]}-{parts[1]}"
-            if len(parts[0]) == 4 and len(parts[1]) == 2 and parts[1].isdigit():
-                start = int(parts[0])
-                end = int(parts[0][:2]) * 100 + int(parts[1])
-                return f"{start}-{end}"
-            if len(parts[0]) == 2 and len(parts[1]) == 2 and parts[1].isdigit():
-                return f"20{parts[0]}-20{parts[1]}"
-    if len(text) == 4 and text.isdigit():
-        return f"20{text[:2]}-20{text[2:]}"
-    raise ValueError('Invalid year label')
-
-
-def year_label_suffix(year_label=None):
-    year_label = normalize_year_label(year_label)
-    start, end = year_label.split('-')
-    return f"{int(start) % 100:02d}{int(end) % 100:02d}"
-
-
-def get_db_path(year_label=None):
-    year_suffix = year_label_suffix(year_label)
-    return os.path.join(ROOT_DIR, f"gp{year_suffix}.db")
-
-
-def get_db(year_label=None):
-    db_path = get_db_path(year_label)
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    conn = sqlite3.connect(db_path)
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     return conn, c
 
-
-def init_db(year_label=None):
-    conn, c = get_db(year_label)
+def init_db():
+    conn, c = get_db()
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             sr_no INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -155,40 +115,30 @@ def init_db(year_label=None):
             payment_status TEXT DEFAULT "Pending"
         )
     ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS admins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            gp_name TEXT NOT NULL,
+            admin_name TEXT NOT NULL,
+            admin_contact TEXT NOT NULL,
+            admin_email TEXT NOT NULL UNIQUE,
+            admin_password TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            upi_id TEXT DEFAULT NULL,
+            helpline_number TEXT DEFAULT NULL
+        )
+    ''')
+    # Migration: add helpline_number if missing
+    try:
+        c.execute('ALTER TABLE admins ADD COLUMN helpline_number TEXT DEFAULT NULL')
+    except Exception:
+        pass
+
     conn.commit()
     conn.close()
 
-
-def list_available_year_labels():
-    labels = set()
-    current_label = get_academic_year_label()
-    labels.add(current_label)
-
-    current_start = int(current_label.split('-')[0])
-    for delta in range(0, 6):
-        year = current_start - delta
-        labels.add(f"{year}-{year + 1}")
-
-    for filename in os.listdir(ROOT_DIR):
-        if filename.startswith('gp') and filename.endswith('.db') and len(filename) == 8:
-            suffix = filename[2:-3]
-            if suffix.isdigit() and len(suffix) == 4:
-                try:
-                    labels.add(normalize_year_label(suffix))
-                except ValueError:
-                    continue
-    years = sorted(labels, key=lambda item: int(item.split('-')[0]), reverse=True)
-    return years
-
-
-def get_selected_year():
-    try:
-        return normalize_year_label(request.values.get('year'))
-    except Exception:
-        return get_academic_year_label()
-
-def insert_user(data, year_label=None):
-    conn, c = get_db(year_label)
+def insert_user(data):
+    conn, c = get_db()
     dict_values = [y for x,y in data.items()]
     dict_keys = [x for x,y in data.items()]
     values = tuple(dict_values)
@@ -201,10 +151,10 @@ def insert_user(data, year_label=None):
     conn.close()
 
 
-def insert_users(rows, year_label=None):
+def insert_users(rows):
     if not rows:
         return
-    conn, c = get_db(year_label)
+    conn, c = get_db()
     keys = tuple(fields.keys())
     placeholders = ', '.join(['?'] * len(keys))
     values = [tuple(row[key] for key in keys) for row in rows]
@@ -583,25 +533,12 @@ def generate_qr_card_image(user, base_url=None):
     return output
 
 
-def get_admin_data():
-    if not os.path.exists(ADMIN_CONFIG_PATH):
-        return None
-    try:
-        with open(ADMIN_CONFIG_PATH, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        return data if isinstance(data, dict) else None
-    except Exception:
-        return None
-
-
-def save_admin_data(data):
-    with open(ADMIN_CONFIG_PATH, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-
 def admin_exists():
-    data = get_admin_data()
-    return bool(data and data.get('admin_email') and data.get('admin_password'))
+    conn, c = get_db()
+    c.execute('SELECT id FROM admins LIMIT 1')
+    row = c.fetchone()
+    conn.close()
+    return row is not None
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -618,10 +555,10 @@ def login():
         password = request.form.get('password', '')
 
         if setup_mode:
-            gp_name = request.form.get('gp_name', '').strip()
-            admin_name = request.form.get('admin_name', '').strip()
+            gp_name       = request.form.get('gp_name', '').strip()
+            admin_name    = request.form.get('admin_name', '').strip()
             admin_contact = request.form.get('admin_contact', '').strip()
-            confirm_pw = request.form.get('confirm_password', '')
+            confirm_pw    = request.form.get('confirm_password', '')
 
             if not gp_name or not admin_name or not admin_contact or not email or not password:
                 error = 'All fields are required.'
@@ -630,26 +567,32 @@ def login():
             elif len(password) < 6:
                 error = 'Password must be at least 6 characters.'
             else:
-                save_admin_data({
-                    'gp_name': gp_name,
-                    'admin_name': admin_name,
-                    'admin_contact': admin_contact,
-                    'admin_email': email,
-                    'admin_password': password,
-                    'upi_id': '',
-                    'helpline_number': ''
-                })
-                load_gp_name()
-                session['admin_logged_in'] = True
-                session['admin_name'] = admin_name
-                session['admin_email'] = email
-                return redirect(url_for('dashboard'))
+                conn, c = get_db()
+                try:
+                    c.execute(
+                        'INSERT INTO admins (gp_name, admin_name, admin_contact, admin_email, admin_password) VALUES (?, ?, ?, ?, ?)',
+                        (gp_name, admin_name, admin_contact, email, password)
+                    )
+                    conn.commit()
+                    load_gp_name()
+                    session['admin_logged_in'] = True
+                    session['admin_name'] = admin_name
+                    session['admin_email'] = email
+                    return redirect(url_for('dashboard'))
+                except Exception as e:
+                    error = f'Error: {str(e)}'
+                finally:
+                    conn.close()
         else:
-            admin = get_admin_data()
-            if admin and admin.get('admin_email') == email and admin.get('admin_password') == password:
+            conn, c = get_db()
+            c.execute('SELECT * FROM admins WHERE admin_email = ? LIMIT 1', (email,))
+            admin = c.fetchone()
+            conn.close()
+
+            if admin and admin['admin_password'] == password:
                 session['admin_logged_in'] = True
-                session['admin_name'] = admin.get('admin_name')
-                session['admin_email'] = admin.get('admin_email')
+                session['admin_name'] = admin['admin_name']
+                session['admin_email'] = admin['admin_email']
                 next_page = request.args.get('next') or url_for('dashboard')
                 return redirect(next_page)
             else:
@@ -667,22 +610,20 @@ def logout():
 @app.route('/add_user', methods=['POST'])
 @login_required
 def add_user():
-    year = get_selected_year()
     data = request.form
-    insert_user(data, year)
-    return redirect(url_for('dashboard', year=year))
+    insert_user(data)
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/add_user_csv', methods=['POST'])
 @login_required
 def add_user_csv():
-    year = get_selected_year()
     file = request.files.get('file')
     if not file or not file.filename:
-        return redirect(url_for('dashboard', year=year))
+        return redirect(url_for('dashboard'))
     content = file.read().decode('utf-8-sig')
     if not content.strip():
-        return redirect(url_for('dashboard', year=year))
+        return redirect(url_for('dashboard'))
     reader = csv.DictReader(io.StringIO(content))
     rows = []
     for row in reader:
@@ -698,8 +639,8 @@ def add_user_csv():
             total_value = str(total)
         normalized_row['ekun_dene_rakkam'] = total_value
         rows.append(normalized_row)
-    insert_users(rows, year)
-    return redirect(url_for('dashboard', year=year))
+    insert_users(rows)
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/download_sample_csv')
@@ -716,9 +657,8 @@ def download_sample_csv():
 @app.route('/edit_user/<int:sr_no>', methods=['POST'])
 @login_required
 def edit_user(sr_no):
-    year = get_selected_year()
     data = request.form
-    conn, c = get_db(year)
+    conn, c = get_db()
     dict_values = [y for x,y in data.items()]
     dict_keys = [x for x,y in data.items()]
     values = tuple(dict_values)
@@ -728,14 +668,13 @@ def edit_user(sr_no):
     del dict_values, dict_keys, values, keys, set_clause
     conn.commit()
     conn.close()
-    return redirect(url_for('dashboard', year=year))
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/delete_user/<int:sr_no>', methods=['POST'])
 @login_required
 def delete_user(sr_no):
-    year = get_selected_year()
-    conn, c = get_db(year)
+    conn, c = get_db()
     c.execute('SELECT payment_ss FROM users WHERE sr_no = ?', (sr_no,))
     user = c.fetchone()
     if user and user['payment_ss'] and os.path.exists(user['payment_ss']):
@@ -746,21 +685,21 @@ def delete_user(sr_no):
     c.execute('DELETE FROM users WHERE sr_no = ?', (sr_no,))
     conn.commit()
     conn.close()
-    return redirect(url_for('dashboard', year=year))
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/user/<int:sr_no>')
 def view_user(sr_no):
-    selected_year = get_selected_year()
-    conn, c = get_db(selected_year)
+    conn, c = get_db()
     c.execute('SELECT * FROM users WHERE sr_no = ?', (sr_no,))
     user = c.fetchone()
+    c.execute('SELECT upi_id FROM admins LIMIT 1')
+    admin = c.fetchone()
     conn.close()
     if not user:
         return "User not found", 404
     session["current_user"] = user["sr_no"]
-    admin = get_admin_data() or {}
-    upi_payment_uri = build_upi_payment_uri(admin.get('upi_id'), user['ekun_dene_rakkam'])
+    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['ekun_dene_rakkam'])
     upi_qr_data = None
     if upi_payment_uri:
         upi_qr_data = image_buffer_to_data_url(generate_upi_qr_card_image(user, upi_payment_uri))
@@ -774,15 +713,15 @@ def view_user(sr_no):
 
 @app.route('/download_qr/<int:sr_no>')
 def download_qr(sr_no):
-    selected_year = get_selected_year()
-    conn, c = get_db(selected_year)
+    conn, c = get_db()
     c.execute('SELECT * FROM users WHERE sr_no = ?', (sr_no,))
     user = c.fetchone()
+    c.execute('SELECT upi_id FROM admins LIMIT 1')
+    admin = c.fetchone()
     conn.close()
     if not user:
         return "User not found", 404
-    admin = get_admin_data() or {}
-    upi_payment_uri = build_upi_payment_uri(admin.get('upi_id'), user['ekun_dene_rakkam'])
+    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['ekun_dene_rakkam'])
     if not upi_payment_uri:
         return "QR not configured", 404
     buffer = generate_upi_qr_card_image(user, upi_payment_uri)
@@ -797,13 +736,12 @@ def download_qr(sr_no):
 @app.route('/qr_code/<int:sr_no>')
 @login_required
 def qr_code(sr_no):
-    selected_year = get_selected_year()
-    conn, c = get_db(selected_year)
+    conn, c = get_db()
     c.execute('SELECT * FROM users WHERE sr_no = ?', (sr_no,))
     user = c.fetchone()
     conn.close()
     if not user:
-        return redirect(url_for('dashboard', year=selected_year))
+        return redirect(url_for('dashboard'))
     buffer = generate_qr_card_image(user)
     return send_file(buffer, mimetype='image/png', as_attachment=True, download_name=f'qr_{user["midkatkram"]}.png')
 
@@ -997,8 +935,7 @@ def approve_payment(sr_no):
 @app.route('/reports')
 @login_required
 def reports():
-    selected_year = get_selected_year()
-    conn, c = get_db(selected_year)
+    conn, c = get_db()
     c.execute('SELECT * FROM users')
     users = c.fetchall()
     conn.close()
@@ -1014,18 +951,14 @@ def reports():
     return render_template('reports.html',
                            unpaid_users=unpaid_users,
                            paid_users=paid_users,
-                           approved_users=approved_users,
-                           selected_year=selected_year,
-                           year_options=list_available_year_labels())
+                           approved_users=approved_users)
 
 
 @app.route('/dashboard')
 @app.route('/dashboard/<int:page>')
 @login_required
 def dashboard(page=1):
-    selected_year = get_selected_year()
-    init_db(selected_year)
-    return render_template('dashboard.html', initial_page=page, selected_year=selected_year, year_options=list_available_year_labels())
+    return render_template('dashboard.html', initial_page=page)
 
 
 @app.route('/api/users')
@@ -1035,8 +968,7 @@ def api_users():
     limit = 300
     offset = (page - 1) * limit
     q = request.args.get('q', '').strip()
-    selected_year = get_selected_year()
-    conn, c = get_db(selected_year)
+    conn, c = get_db()
     search_fields = [
         'midkatkram', 'ghar_malkache_nav', 'gharpatti_magil', 'gharpatti_chalu', 'gharpatti_ekun',
         'divabatti_magil', 'divabatti_chalu', 'divabatti_ekun',
@@ -1056,14 +988,13 @@ def api_users():
         c.execute('SELECT * FROM users LIMIT ? OFFSET ?', (limit, offset))
     users = [dict(row) for row in c.fetchall()]
     conn.close()
-    return jsonify({'users': users, 'total': total, 'page': page, 'limit': limit, 'q': q, 'year': selected_year})
+    return jsonify({'users': users, 'total': total, 'page': page, 'limit': limit, 'q': q})
 
 
 @app.route('/delete_all_records', methods=['POST'])
 @login_required
 def delete_all_records():
-    year = get_selected_year()
-    conn, c = get_db(year)
+    conn, c = get_db()
     c.execute('SELECT payment_ss FROM users WHERE payment_ss IS NOT NULL AND payment_ss != ""')
     payment_files = [row['payment_ss'] for row in c.fetchall()]
     for payment_path in payment_files:
@@ -1079,7 +1010,7 @@ def delete_all_records():
         pass
     conn.commit()
     conn.close()
-    return redirect(url_for('dashboard', year=year))
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/')
@@ -1092,37 +1023,45 @@ def home():
 @app.route('/admin')
 @login_required
 def admin_page():
-    admin = get_admin_data()
+    conn, c = get_db()
+    c.execute('SELECT * FROM admins LIMIT 1')
+    admin = c.fetchone()
+    conn.close()
     return render_template('admin.html', admin=admin)
 
 
 @app.route('/admin/save', methods=['POST'])
 @login_required
 def save_admin():
-    gp_name         = request.form.get('gp_name', '').strip()
-    admin_name      = request.form.get('admin_name', '').strip()
-    admin_contact   = request.form.get('admin_contact', '').strip()
-    admin_email     = request.form.get('admin_email', '').strip()
-    upi_id          = request.form.get('upi_id', '').strip()
-    helpline_number = request.form.get('helpline_number', '').strip()
-    admin = get_admin_data() or {}
-    admin.update({
-        'gp_name': gp_name,
-        'admin_name': admin_name,
-        'admin_contact': admin_contact,
-        'admin_email': admin_email,
-        'upi_id': upi_id,
-        'helpline_number': helpline_number,
-        'admin_password': admin.get('admin_password', 'changeme')
-    })
+    gp_name          = request.form.get('gp_name', '').strip()
+    admin_name       = request.form.get('admin_name', '').strip()
+    admin_contact    = request.form.get('admin_contact', '').strip()
+    admin_email      = request.form.get('admin_email', '').strip()
+    upi_id           = request.form.get('upi_id', '').strip()
+    helpline_number  = request.form.get('helpline_number', '').strip()
+    conn, c = get_db()
+    c.execute('SELECT id FROM admins LIMIT 1')
+    existing = c.fetchone()
     try:
-        save_admin_data(admin)
+        if existing:
+            c.execute(
+                'UPDATE admins SET gp_name=?, admin_name=?, admin_contact=?, admin_email=?, upi_id=?, helpline_number=? WHERE id=?',
+                (gp_name, admin_name, admin_contact, admin_email, upi_id, helpline_number, existing['id'])
+            )
+        else:
+            c.execute(
+                'INSERT INTO admins (gp_name, admin_name, admin_contact, admin_email, admin_password, upi_id, helpline_number) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (gp_name, admin_name, admin_contact, admin_email, 'changeme', upi_id, helpline_number)
+            )
+        conn.commit()
         load_gp_name()
         session['admin_name'] = admin_name
         session['admin_email'] = admin_email
         flash('Information saved successfully.', 'success')
     except Exception as e:
         flash(f'Error: {str(e)}', 'error')
+    finally:
+        conn.close()
     return redirect(url_for('admin_page'))
 
 
@@ -1137,9 +1076,10 @@ def reset_admin_password():
     if len(new_password) < 6:
         flash('Password must be at least 6 characters.', 'error')
         return redirect(url_for('admin_page'))
-    admin = get_admin_data() or {}
-    admin['admin_password'] = new_password
-    save_admin_data(admin)
+    conn, c = get_db()
+    c.execute('UPDATE admins SET admin_password = ? WHERE id = (SELECT id FROM admins LIMIT 1)', (new_password,))
+    conn.commit()
+    conn.close()
     flash('Password updated successfully.', 'success')
     return redirect(url_for('admin_page'))
 
