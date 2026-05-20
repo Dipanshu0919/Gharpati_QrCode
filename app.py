@@ -3,6 +3,7 @@ import csv
 import datetime
 import io
 import os
+import platform
 import qrcode
 import sqlite3
 import re
@@ -18,13 +19,18 @@ import threading
 import time
 import shutil
 
+from dotenv import load_dotenv
+load_dotenv()
 
-app = Flask(__name__)
+
+APP_PORT = int(os.environ.get("APP_PORT", 1594))
+STATIC_PATH = os.path.join(os.path.dirname(__file__), "static")
+
+app = Flask(__name__, static_url_path='/static', static_folder=STATIC_PATH)
 app.secret_key = "replace-with-a-secure-key"
 app.config['SESSION_PERMANENT'] = False
 DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
 SAMPLE_CSV_PATH = os.path.join(os.path.dirname(__file__), "sample_users.csv")
-UPI_QR_FILENAME = "upiqr.png"
 
 GP_NAME = "ग्रामपंचायत"
 HELPLINE_NUMBER = ""
@@ -128,12 +134,6 @@ def init_db():
             helpline_number TEXT DEFAULT NULL
         )
     ''')
-    # Migration: add helpline_number if missing
-    try:
-        c.execute('ALTER TABLE admins ADD COLUMN helpline_number TEXT DEFAULT NULL')
-    except Exception:
-        pass
-
     conn.commit()
     conn.close()
 
@@ -174,9 +174,6 @@ def to_amount(value):
 def has_marathi(text):
     return bool(re.search(r'[\u0900-\u097F]', str(text)))
 
-import os
-import platform
-from PIL import ImageFont
 
 def get_font(size=24, text=None):
 
@@ -205,15 +202,15 @@ def get_font(size=24, text=None):
         # Linux font paths
         if text is not None and not has_marathi(text):
             font_files = [
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-                "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
+                "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf",
+                "/usr/share/fonts/google-noto/NotoSansDevanagari-Regular.ttf",
             ]
         else:
             font_files = [
-                "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                "/usr/share/fonts/google-noto/NotoSansDevanagari-Regular.ttf",
+                "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf",
             ]
 
     for path in font_files:
@@ -321,9 +318,10 @@ def normalize_amount(value):
 
 def build_upi_payment_uri(admin_upi_id, amount):
     normalized_amount = normalize_amount(amount)
+
     if not admin_upi_id or not normalized_amount:
         return None
-    return (
+    to_return = (
         "upi://pay"
         f"?pa={admin_upi_id.strip()}"
         "&pn=grampanchayat"
@@ -331,6 +329,7 @@ def build_upi_payment_uri(admin_upi_id, amount):
         f"&am={normalized_amount}"
         "&cu=INR"
     )
+    return to_return
 
 
 def qr_data_url(payload):
@@ -395,7 +394,12 @@ def generate_upi_qr_card_image(user, upi_payment_uri):
     qr.add_data(upi_payment_uri)
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
-    qr_img = qr_img.resize((420, 420), Image.Resampling.LANCZOS)
+    try:
+        resample_method = Image.Resampling.LANCZOS
+    except AttributeError:
+        resample_method = Image.LANCZOS
+
+    qr_img = qr_img.resize((400, 400), resample_method)
 
     width = 900
     height = 900
@@ -467,10 +471,15 @@ def generate_qr_card_image(user, base_url=None):
     qr.add_data(qr_url)
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
-    qr_img = qr_img.resize((300, 300), Image.Resampling.LANCZOS)
+    try:
+        resample_method = Image.Resampling.LANCZOS
+    except AttributeError:
+        resample_method = Image.LANCZOS
+
+    qr_img = qr_img.resize((300, 300), resample_method)
 
     width = 900
-    height = 750
+    height = 610
     background = Image.new('RGB', (width, height), '#ffffff')
     draw = ImageDraw.Draw(background)
 
@@ -502,22 +511,18 @@ def generate_qr_card_image(user, base_url=None):
     inst_x = 50
     inst_y = 450
 
-    draw.rectangle([30, inst_y - 20, width - 30, inst_y + 200], fill='#fff7ed', outline='#fed7aa', width=2)
+    draw.rectangle([30, inst_y - 20, width - 30, inst_y + 90], fill='#fff7ed', outline='#fed7aa', width=2)
 
     inst_title = "घरपट्टीची रक्कम QR कोडद्वारे भरण्याचे टप्पे :"
     draw_multilingual_text(draw, inst_x, inst_y - 5, inst_title, '#c2410c', 24)
 
     steps = [
-        "- QR कोड स्कॅन करण्यासाठी Play Store किंवा App Store वरून कोणतेही ",
-        "  \"QR Code Scanner\" App डाउनलोड करा आणि उघडा आणि वरील QR कोड स्कॅन करा.",
-        "- स्कॅन केल्यावर आपल्याला एक लिंक दिसेल, त्यावर क्लिक करा.",
-        "- उपलब्ध UPI QR कोड स्कॅन करा आणि घरपट्टी ची रक्कम भरा !.",
+        "- Google Scanner वापरून QR Code स्कॅन करा."
     ]
 
     step_y = inst_y + 40
     for step in steps:
         draw_multilingual_text(draw, inst_x, step_y, step, '#431407', 22)
-        step_y += 35
 
     draw.line([0, height - 60, width, height - 60], fill='#e2e8f0', width=2)
 
@@ -525,7 +530,7 @@ def generate_qr_card_image(user, base_url=None):
     if HELPLINE_NUMBER:
         footer_text += f'  |  हेल्पलाइन: {HELPLINE_NUMBER}'
     footer_w = get_multilingual_text_width(draw, footer_text, 22)
-    draw_multilingual_text(draw, (width - footer_w) // 2, height - 42, footer_text, '#1e3a8a', 22)
+    draw_multilingual_text(draw, (width - footer_w) // 2, height - 45, footer_text, '#1e3a8a', 22)
 
     output = io.BytesIO()
     background.save(output, format='PNG')
@@ -703,6 +708,7 @@ def view_user(sr_no):
     upi_qr_data = None
     if upi_payment_uri:
         upi_qr_data = image_buffer_to_data_url(generate_upi_qr_card_image(user, upi_payment_uri))
+
     return render_template(
         'view_user.html',
         user=user,
@@ -1087,4 +1093,4 @@ def reset_admin_password():
 if __name__ == '__main__':
     init_db()
     load_gp_name()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=APP_PORT)
