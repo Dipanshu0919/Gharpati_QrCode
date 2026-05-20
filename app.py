@@ -122,6 +122,67 @@ def init_db():
         )
     ''')
     c.execute('''
+        CREATE TABLE IF NOT EXISTS janam_dakhla (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_sr_no INTEGER,
+            service_type TEXT NOT NULL DEFAULT 'birth',
+            applicant_name TEXT,
+            applicant_name_marathi TEXT,
+            applicant_name_english TEXT,
+            mobile_number TEXT,
+            child_name TEXT,
+            father_name TEXT,
+            mother_name TEXT,
+            birth_date TEXT,
+            child_gender TEXT,
+            deceased_name TEXT,
+            deceased_gender TEXT,
+            death_date TEXT,
+            husband_name TEXT,
+            wife_name TEXT,
+            marriage_date TEXT,
+            marriage_place TEXT,
+            certificate_name_marathi TEXT,
+            certificate_name_english TEXT,
+            family_head_marathi TEXT,
+            poverty_line_number TEXT,
+            relation_with_family_head TEXT,
+            status TEXT DEFAULT "Pending",
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_sr_no) REFERENCES users(sr_no)
+        )
+    ''')
+    existing_columns = [row['name'] for row in c.execute("PRAGMA table_info(janam_dakhla)")]
+    required_columns = {
+        'service_type': "TEXT NOT NULL DEFAULT 'birth'",
+        'applicant_name': 'TEXT',
+        'applicant_name_marathi': 'TEXT',
+        'applicant_name_english': 'TEXT',
+        'mobile_number': 'TEXT',
+        'child_name': 'TEXT',
+        'father_name': 'TEXT',
+        'mother_name': 'TEXT',
+        'birth_date': 'TEXT',
+        'child_gender': 'TEXT',
+        'deceased_name': 'TEXT',
+        'deceased_gender': 'TEXT',
+        'death_date': 'TEXT',
+        'husband_name': 'TEXT',
+        'wife_name': 'TEXT',
+        'marriage_date': 'TEXT',
+        'marriage_place': 'TEXT',
+        'certificate_name_marathi': 'TEXT',
+        'certificate_name_english': 'TEXT',
+        'family_head_marathi': 'TEXT',
+        'poverty_line_number': 'TEXT',
+        'relation_with_family_head': 'TEXT',
+        'status': 'TEXT DEFAULT "Pending"',
+        'created_at': 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
+    }
+    for column, definition in required_columns.items():
+        if column not in existing_columns:
+            c.execute(f"ALTER TABLE janam_dakhla ADD COLUMN {column} {definition}")
+    c.execute('''
         CREATE TABLE IF NOT EXISTS admins (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             gp_name TEXT NOT NULL,
@@ -163,6 +224,87 @@ def insert_users(rows):
     ''', values)
     conn.commit()
     conn.close()
+
+
+def insert_janam_dakhla_request(data):
+    conn, c = get_db()
+    c.execute('''
+        INSERT INTO janam_dakhla (
+            user_sr_no,
+            service_type,
+            applicant_name,
+            applicant_name_marathi,
+            applicant_name_english,
+            mobile_number,
+            child_name,
+            father_name,
+            mother_name,
+            birth_date,
+            child_gender,
+            deceased_name,
+            deceased_gender,
+            death_date,
+            husband_name,
+            wife_name,
+            marriage_date,
+            marriage_place,
+            certificate_name_marathi,
+            certificate_name_english,
+            family_head_marathi,
+            poverty_line_number,
+            relation_with_family_head
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        data.get('user_sr_no'),
+        data.get('service_type', 'birth'),
+        data.get('applicant_name'),
+        data.get('applicant_name_marathi'),
+        data.get('applicant_name_english'),
+        data.get('mobile_number'),
+        data.get('child_name'),
+        data.get('father_name'),
+        data.get('mother_name'),
+        data.get('birth_date'),
+        data.get('child_gender'),
+        data.get('deceased_name'),
+        data.get('deceased_gender'),
+        data.get('death_date'),
+        data.get('husband_name'),
+        data.get('wife_name'),
+        data.get('marriage_date'),
+        data.get('marriage_place'),
+        data.get('certificate_name_marathi'),
+        data.get('certificate_name_english'),
+        data.get('family_head_marathi'),
+        data.get('poverty_line_number'),
+        data.get('relation_with_family_head'),
+    ))
+    conn.commit()
+    conn.close()
+
+
+def get_janam_dakhla_requests():
+    conn, c = get_db()
+    c.execute('SELECT * FROM janam_dakhla ORDER BY created_at DESC')
+    rows = [dict(row) for row in c.fetchall()]
+    conn.close()
+    return rows
+
+
+def get_janam_dakhla_requests_by_user(user_sr_no):
+    conn, c = get_db()
+    c.execute('SELECT * FROM janam_dakhla WHERE user_sr_no = ? ORDER BY created_at DESC', (user_sr_no,))
+    rows = [dict(row) for row in c.fetchall()]
+    conn.close()
+    return rows
+
+
+def approve_janam_dakhla_request(request_id):
+    conn, c = get_db()
+    c.execute('UPDATE janam_dakhla SET status = ? WHERE id = ?', ('Approved', request_id))
+    conn.commit()
+    conn.close()
+
 
 def to_amount(value):
     try:
@@ -708,13 +850,48 @@ def view_user(sr_no):
     upi_qr_data = None
     if upi_payment_uri:
         upi_qr_data = image_buffer_to_data_url(generate_upi_qr_card_image(user, upi_payment_uri))
+    service_requests = get_janam_dakhla_requests_by_user(user['sr_no'])
 
     return render_template(
         'view_user.html',
         user=user,
         upi_payment_uri=upi_payment_uri,
         upi_qr_data=upi_qr_data,
+        service_requests=service_requests,
     )
+
+
+@app.route('/services/request', methods=['POST'])
+def submit_janam_dakhla_request():
+    request_data = {
+        'user_sr_no': session.get('current_user'),
+        'service_type': request.form.get('service_type', 'birth').strip(),
+        'applicant_name': request.form.get('applicant_name', '').strip(),
+        'applicant_name_marathi': request.form.get('applicant_name_marathi', '').strip(),
+        'applicant_name_english': request.form.get('applicant_name_english', '').strip(),
+        'mobile_number': request.form.get('mobile_number', '').strip(),
+        'child_name': request.form.get('child_name', '').strip(),
+        'father_name': request.form.get('father_name', '').strip(),
+        'mother_name': request.form.get('mother_name', '').strip(),
+        'birth_date': request.form.get('birth_date', '').strip(),
+        'child_gender': request.form.get('child_gender', '').strip(),
+        'deceased_name': request.form.get('deceased_name', '').strip(),
+        'deceased_gender': request.form.get('deceased_gender', '').strip(),
+        'death_date': request.form.get('death_date', '').strip(),
+        'husband_name': request.form.get('husband_name', '').strip(),
+        'wife_name': request.form.get('wife_name', '').strip(),
+        'marriage_date': request.form.get('marriage_date', '').strip(),
+        'marriage_place': request.form.get('marriage_place', '').strip(),
+        'certificate_name_marathi': request.form.get('certificate_name_marathi', '').strip(),
+        'certificate_name_english': request.form.get('certificate_name_english', '').strip(),
+        'family_head_marathi': request.form.get('family_head_marathi', '').strip(),
+        'poverty_line_number': request.form.get('poverty_line_number', '').strip(),
+        'relation_with_family_head': request.form.get('relation_with_family_head', '').strip(),
+    }
+    if not request_data['applicant_name']:
+        request_data['applicant_name'] = request_data['applicant_name_marathi'] or request_data['applicant_name_english']
+    insert_janam_dakhla_request(request_data)
+    return redirect(url_for('view_user', sr_no=request_data['user_sr_no']))
 
 
 @app.route('/download_qr/<int:sr_no>')
@@ -936,6 +1113,22 @@ def approve_payment(sr_no):
     conn.commit()
     conn.close()
     return redirect(request.referrer or url_for('dashboard'))
+
+
+@app.route('/services')
+@login_required
+def services():
+    requests_list = get_janam_dakhla_requests()
+    return render_template('services.html', requests=requests_list)
+
+
+@app.route('/services/approve/<int:request_id>', methods=['POST'])
+@login_required
+def approve_service_request(request_id):
+    approve_janam_dakhla_request(request_id)
+    if request.is_json:
+        return jsonify({'success': True})
+    return redirect(request.referrer or url_for('services'))
 
 
 @app.route('/reports')
