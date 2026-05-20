@@ -1,13 +1,12 @@
-<!doctype html>
-<html lang="mr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin Settings</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
+{% extends "menubar.html" %}
+
+{% block title %}अॅडमिन सेटिंग{% endblock %}
+
+{% block page_title %}अॅडमिन सेटिंग{% endblock %}
+{% block page_description %}साइट प्रशासक प्रोफाइल आणि पासवर्ड व्यवस्थापित करा.{% endblock %}
+
+{% block extra_styles %}
+:root {
       --blue: #1f4b99;
       --blue-light: #eef4ff;
       --green: #059669;
@@ -130,83 +129,10 @@
     /* Password strength indicator */
     .pw-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
     #pw-mismatch { color: var(--red); font-size: 12px; margin-top: 6px; display: none; }
-  </style>
-</head>
-<body>
-<div class="page">
+{% endblock %}
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <nav>
-      <a href="{{ url_for('dashboard') }}" class="nav-item">
-        <span class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </span>
-        <span class="nav-text" style="margin-left:8px;">Users</span>
-      </a>
-      <a href="{{ url_for('reports') }}" class="nav-item">
-        <span class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="20" x2="12" y2="10"></line>
-            <line x1="18" y1="20" x2="18" y2="4"></line>
-            <line x1="6" y1="20" x2="6" y2="16"></line>
-          </svg>
-        </span>
-        <span class="nav-text" style="margin-left:8px;">Reports</span>
-      </a>
-      <a href="{{ url_for('generateqr') }}" class="nav-item">
-        <span class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="5" height="5" x="3" y="3" rx="1"></rect>
-            <rect width="5" height="5" x="16" y="3" rx="1"></rect>
-            <rect width="5" height="5" x="3" y="16" rx="1"></rect>
-            <path d="M21 16h-3v3h3z"></path>
-            <path d="M16 21h-3v-3h3z"></path>
-          </svg>
-        </span>
-        <span class="nav-text" style="margin-left:8px;">QR Generate</span>
-      </a>
-      <a href="{{ url_for('admin_page') }}" class="nav-item active">
-        <span class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="8" r="4"></circle>
-            <path d="M6 20v-1a6 6 0 0 1 12 0v1"></path>
-          </svg>
-        </span>
-        <span class="nav-text" style="margin-left:8px;">Admin</span>
-      </a>
-      <a href="{{ url_for('logout') }}" class="nav-item" style="margin-top: auto; color: #f87171;"
-        onclick="return confirm('Logout from admin panel?');">
-        <span class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-        </span>
-        <span class="nav-text" style="margin-left:8px;">Logout</span>
-      </a>
-    </nav>
-  </aside>
-
-  <!-- Main -->
-  <div class="main-content">
-    <div class="header">
-      <h1>Admin Settings</h1>
-      <p>Manage the site administrator profile and password.</p>
-    </div>
-
-    <div class="content">
-
-      <!-- Flash messages -->
+{% block content %}
+<!-- Flash messages -->
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
           <div class="flash flash-{{ category }}">
@@ -402,5 +328,4 @@
     }
   });
 </script>
-</body>
-</html>
+{% endblock %}

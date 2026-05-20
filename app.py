@@ -3,6 +3,7 @@ import csv
 import datetime
 import io
 import os
+import platform
 import qrcode
 import sqlite3
 import re
@@ -18,13 +19,18 @@ import threading
 import time
 import shutil
 
+from dotenv import load_dotenv
+load_dotenv()
 
-app = Flask(__name__)
+
+APP_PORT = int(os.environ.get("APP_PORT", 1594))
+STATIC_PATH = os.path.join(os.path.dirname(__file__), "static")
+
+app = Flask(__name__, static_url_path='/static', static_folder=STATIC_PATH)
 app.secret_key = "replace-with-a-secure-key"
 app.config['SESSION_PERMANENT'] = False
 DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
 SAMPLE_CSV_PATH = os.path.join(os.path.dirname(__file__), "sample_users.csv")
-UPI_QR_FILENAME = "upiqr.png"
 
 GP_NAME = "ग्रामपंचायत"
 HELPLINE_NUMBER = ""
@@ -116,6 +122,67 @@ def init_db():
         )
     ''')
     c.execute('''
+        CREATE TABLE IF NOT EXISTS janam_dakhla (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_sr_no INTEGER,
+            service_type TEXT NOT NULL DEFAULT 'birth',
+            applicant_name TEXT,
+            applicant_name_marathi TEXT,
+            applicant_name_english TEXT,
+            mobile_number TEXT,
+            child_name TEXT,
+            father_name TEXT,
+            mother_name TEXT,
+            birth_date TEXT,
+            child_gender TEXT,
+            deceased_name TEXT,
+            deceased_gender TEXT,
+            death_date TEXT,
+            husband_name TEXT,
+            wife_name TEXT,
+            marriage_date TEXT,
+            marriage_place TEXT,
+            certificate_name_marathi TEXT,
+            certificate_name_english TEXT,
+            family_head_marathi TEXT,
+            poverty_line_number TEXT,
+            relation_with_family_head TEXT,
+            status TEXT DEFAULT "Pending",
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_sr_no) REFERENCES users(sr_no)
+        )
+    ''')
+    existing_columns = [row['name'] for row in c.execute("PRAGMA table_info(janam_dakhla)")]
+    required_columns = {
+        'service_type': "TEXT NOT NULL DEFAULT 'birth'",
+        'applicant_name': 'TEXT',
+        'applicant_name_marathi': 'TEXT',
+        'applicant_name_english': 'TEXT',
+        'mobile_number': 'TEXT',
+        'child_name': 'TEXT',
+        'father_name': 'TEXT',
+        'mother_name': 'TEXT',
+        'birth_date': 'TEXT',
+        'child_gender': 'TEXT',
+        'deceased_name': 'TEXT',
+        'deceased_gender': 'TEXT',
+        'death_date': 'TEXT',
+        'husband_name': 'TEXT',
+        'wife_name': 'TEXT',
+        'marriage_date': 'TEXT',
+        'marriage_place': 'TEXT',
+        'certificate_name_marathi': 'TEXT',
+        'certificate_name_english': 'TEXT',
+        'family_head_marathi': 'TEXT',
+        'poverty_line_number': 'TEXT',
+        'relation_with_family_head': 'TEXT',
+        'status': 'TEXT DEFAULT "Pending"',
+        'created_at': 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
+    }
+    for column, definition in required_columns.items():
+        if column not in existing_columns:
+            c.execute(f"ALTER TABLE janam_dakhla ADD COLUMN {column} {definition}")
+    c.execute('''
         CREATE TABLE IF NOT EXISTS admins (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             gp_name TEXT NOT NULL,
@@ -128,12 +195,6 @@ def init_db():
             helpline_number TEXT DEFAULT NULL
         )
     ''')
-    # Migration: add helpline_number if missing
-    try:
-        c.execute('ALTER TABLE admins ADD COLUMN helpline_number TEXT DEFAULT NULL')
-    except Exception:
-        pass
-
     conn.commit()
     conn.close()
 
@@ -164,6 +225,87 @@ def insert_users(rows):
     conn.commit()
     conn.close()
 
+
+def insert_janam_dakhla_request(data):
+    conn, c = get_db()
+    c.execute('''
+        INSERT INTO janam_dakhla (
+            user_sr_no,
+            service_type,
+            applicant_name,
+            applicant_name_marathi,
+            applicant_name_english,
+            mobile_number,
+            child_name,
+            father_name,
+            mother_name,
+            birth_date,
+            child_gender,
+            deceased_name,
+            deceased_gender,
+            death_date,
+            husband_name,
+            wife_name,
+            marriage_date,
+            marriage_place,
+            certificate_name_marathi,
+            certificate_name_english,
+            family_head_marathi,
+            poverty_line_number,
+            relation_with_family_head
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        data.get('user_sr_no'),
+        data.get('service_type', 'birth'),
+        data.get('applicant_name'),
+        data.get('applicant_name_marathi'),
+        data.get('applicant_name_english'),
+        data.get('mobile_number'),
+        data.get('child_name'),
+        data.get('father_name'),
+        data.get('mother_name'),
+        data.get('birth_date'),
+        data.get('child_gender'),
+        data.get('deceased_name'),
+        data.get('deceased_gender'),
+        data.get('death_date'),
+        data.get('husband_name'),
+        data.get('wife_name'),
+        data.get('marriage_date'),
+        data.get('marriage_place'),
+        data.get('certificate_name_marathi'),
+        data.get('certificate_name_english'),
+        data.get('family_head_marathi'),
+        data.get('poverty_line_number'),
+        data.get('relation_with_family_head'),
+    ))
+    conn.commit()
+    conn.close()
+
+
+def get_janam_dakhla_requests():
+    conn, c = get_db()
+    c.execute('SELECT * FROM janam_dakhla ORDER BY created_at DESC')
+    rows = [dict(row) for row in c.fetchall()]
+    conn.close()
+    return rows
+
+
+def get_janam_dakhla_requests_by_user(user_sr_no):
+    conn, c = get_db()
+    c.execute('SELECT * FROM janam_dakhla WHERE user_sr_no = ? ORDER BY created_at DESC', (user_sr_no,))
+    rows = [dict(row) for row in c.fetchall()]
+    conn.close()
+    return rows
+
+
+def approve_janam_dakhla_request(request_id):
+    conn, c = get_db()
+    c.execute('UPDATE janam_dakhla SET status = ? WHERE id = ?', ('Approved', request_id))
+    conn.commit()
+    conn.close()
+
+
 def to_amount(value):
     try:
         text = str(value).strip().replace(',', '')
@@ -174,9 +316,6 @@ def to_amount(value):
 def has_marathi(text):
     return bool(re.search(r'[\u0900-\u097F]', str(text)))
 
-import os
-import platform
-from PIL import ImageFont
 
 def get_font(size=24, text=None):
 
@@ -205,15 +344,15 @@ def get_font(size=24, text=None):
         # Linux font paths
         if text is not None and not has_marathi(text):
             font_files = [
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-                "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
+                "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf",
+                "/usr/share/fonts/google-noto/NotoSansDevanagari-Regular.ttf",
             ]
         else:
             font_files = [
-                "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                "/usr/share/fonts/google-noto/NotoSansDevanagari-Regular.ttf",
+                "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf",
             ]
 
     for path in font_files:
@@ -321,9 +460,10 @@ def normalize_amount(value):
 
 def build_upi_payment_uri(admin_upi_id, amount):
     normalized_amount = normalize_amount(amount)
+
     if not admin_upi_id or not normalized_amount:
         return None
-    return (
+    to_return = (
         "upi://pay"
         f"?pa={admin_upi_id.strip()}"
         "&pn=grampanchayat"
@@ -331,6 +471,7 @@ def build_upi_payment_uri(admin_upi_id, amount):
         f"&am={normalized_amount}"
         "&cu=INR"
     )
+    return to_return
 
 
 def qr_data_url(payload):
@@ -395,7 +536,12 @@ def generate_upi_qr_card_image(user, upi_payment_uri):
     qr.add_data(upi_payment_uri)
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
-    qr_img = qr_img.resize((420, 420), Image.Resampling.LANCZOS)
+    try:
+        resample_method = Image.Resampling.LANCZOS
+    except AttributeError:
+        resample_method = Image.LANCZOS
+
+    qr_img = qr_img.resize((400, 400), resample_method)
 
     width = 900
     height = 900
@@ -467,10 +613,15 @@ def generate_qr_card_image(user, base_url=None):
     qr.add_data(qr_url)
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
-    qr_img = qr_img.resize((300, 300), Image.Resampling.LANCZOS)
+    try:
+        resample_method = Image.Resampling.LANCZOS
+    except AttributeError:
+        resample_method = Image.LANCZOS
+
+    qr_img = qr_img.resize((300, 300), resample_method)
 
     width = 900
-    height = 750
+    height = 610
     background = Image.new('RGB', (width, height), '#ffffff')
     draw = ImageDraw.Draw(background)
 
@@ -502,22 +653,18 @@ def generate_qr_card_image(user, base_url=None):
     inst_x = 50
     inst_y = 450
 
-    draw.rectangle([30, inst_y - 20, width - 30, inst_y + 200], fill='#fff7ed', outline='#fed7aa', width=2)
+    draw.rectangle([30, inst_y - 20, width - 30, inst_y + 90], fill='#fff7ed', outline='#fed7aa', width=2)
 
     inst_title = "घरपट्टीची रक्कम QR कोडद्वारे भरण्याचे टप्पे :"
     draw_multilingual_text(draw, inst_x, inst_y - 5, inst_title, '#c2410c', 24)
 
     steps = [
-        "- QR कोड स्कॅन करण्यासाठी Play Store किंवा App Store वरून कोणतेही ",
-        "  \"QR Code Scanner\" App डाउनलोड करा आणि उघडा आणि वरील QR कोड स्कॅन करा.",
-        "- स्कॅन केल्यावर आपल्याला एक लिंक दिसेल, त्यावर क्लिक करा.",
-        "- उपलब्ध UPI QR कोड स्कॅन करा आणि घरपट्टी ची रक्कम भरा !.",
+        "- Google Scanner वापरून QR Code स्कॅन करा."
     ]
 
     step_y = inst_y + 40
     for step in steps:
         draw_multilingual_text(draw, inst_x, step_y, step, '#431407', 22)
-        step_y += 35
 
     draw.line([0, height - 60, width, height - 60], fill='#e2e8f0', width=2)
 
@@ -525,7 +672,7 @@ def generate_qr_card_image(user, base_url=None):
     if HELPLINE_NUMBER:
         footer_text += f'  |  हेल्पलाइन: {HELPLINE_NUMBER}'
     footer_w = get_multilingual_text_width(draw, footer_text, 22)
-    draw_multilingual_text(draw, (width - footer_w) // 2, height - 42, footer_text, '#1e3a8a', 22)
+    draw_multilingual_text(draw, (width - footer_w) // 2, height - 45, footer_text, '#1e3a8a', 22)
 
     output = io.BytesIO()
     background.save(output, format='PNG')
@@ -703,12 +850,48 @@ def view_user(sr_no):
     upi_qr_data = None
     if upi_payment_uri:
         upi_qr_data = image_buffer_to_data_url(generate_upi_qr_card_image(user, upi_payment_uri))
+    service_requests = get_janam_dakhla_requests_by_user(user['sr_no'])
+
     return render_template(
         'view_user.html',
         user=user,
         upi_payment_uri=upi_payment_uri,
         upi_qr_data=upi_qr_data,
+        service_requests=service_requests,
     )
+
+
+@app.route('/services/request', methods=['POST'])
+def submit_janam_dakhla_request():
+    request_data = {
+        'user_sr_no': session.get('current_user'),
+        'service_type': request.form.get('service_type', 'birth').strip(),
+        'applicant_name': request.form.get('applicant_name', '').strip(),
+        'applicant_name_marathi': request.form.get('applicant_name_marathi', '').strip(),
+        'applicant_name_english': request.form.get('applicant_name_english', '').strip(),
+        'mobile_number': request.form.get('mobile_number', '').strip(),
+        'child_name': request.form.get('child_name', '').strip(),
+        'father_name': request.form.get('father_name', '').strip(),
+        'mother_name': request.form.get('mother_name', '').strip(),
+        'birth_date': request.form.get('birth_date', '').strip(),
+        'child_gender': request.form.get('child_gender', '').strip(),
+        'deceased_name': request.form.get('deceased_name', '').strip(),
+        'deceased_gender': request.form.get('deceased_gender', '').strip(),
+        'death_date': request.form.get('death_date', '').strip(),
+        'husband_name': request.form.get('husband_name', '').strip(),
+        'wife_name': request.form.get('wife_name', '').strip(),
+        'marriage_date': request.form.get('marriage_date', '').strip(),
+        'marriage_place': request.form.get('marriage_place', '').strip(),
+        'certificate_name_marathi': request.form.get('certificate_name_marathi', '').strip(),
+        'certificate_name_english': request.form.get('certificate_name_english', '').strip(),
+        'family_head_marathi': request.form.get('family_head_marathi', '').strip(),
+        'poverty_line_number': request.form.get('poverty_line_number', '').strip(),
+        'relation_with_family_head': request.form.get('relation_with_family_head', '').strip(),
+    }
+    if not request_data['applicant_name']:
+        request_data['applicant_name'] = request_data['applicant_name_marathi'] or request_data['applicant_name_english']
+    insert_janam_dakhla_request(request_data)
+    return redirect(url_for('view_user', sr_no=request_data['user_sr_no']))
 
 
 @app.route('/download_qr/<int:sr_no>')
@@ -932,6 +1115,22 @@ def approve_payment(sr_no):
     return redirect(request.referrer or url_for('dashboard'))
 
 
+@app.route('/services')
+@login_required
+def services():
+    requests_list = get_janam_dakhla_requests()
+    return render_template('services.html', requests=requests_list)
+
+
+@app.route('/services/approve/<int:request_id>', methods=['POST'])
+@login_required
+def approve_service_request(request_id):
+    approve_janam_dakhla_request(request_id)
+    if request.is_json:
+        return jsonify({'success': True})
+    return redirect(request.referrer or url_for('services'))
+
+
 @app.route('/reports')
 @login_required
 def reports():
@@ -1087,4 +1286,4 @@ def reset_admin_password():
 if __name__ == '__main__':
     init_db()
     load_gp_name()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=APP_PORT)

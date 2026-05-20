@@ -13,6 +13,11 @@
       --surface-alt: #f8fbff;
       --border: #dfe4ec;
       --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --primary: #1f4b99;
+      --accent: #0f6bff;
+      --success: #166534;
+      --warning: #b45309;
+      --danger: #dc2626;
     }
 
     * {
@@ -23,36 +28,36 @@
       margin: 0;
       min-height: 100vh;
       font-family: Inter, Arial, sans-serif;
-      background: #eef4fb;
+      background: #e8eff8;
       color: var(--text);
       line-height: 1.5;
     }
 
     .page {
-      width: min(100%, 980px);
+      width: min(100%, 1120px);
       margin: 0 auto;
-      padding: 20px;
+      padding: 24px;
     }
 
     .hero {
-      padding: 26px 28px;
-      border-radius: 24px;
+      padding: 32px;
+      border-radius: 28px;
       background: var(--surface);
       box-shadow: var(--shadow);
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     .hero h1 {
       margin: 0;
-      font-size: clamp(2rem, 3vw, 2.8rem);
+      font-size: clamp(2rem, 3vw, 3rem);
       letter-spacing: -0.03em;
     }
 
     .hero p {
-      margin: 10px 0 0;
+      margin: 14px 0 0;
       color: var(--muted);
       font-size: 1rem;
-      max-width: 42rem;
+      max-width: 46rem;
     }
 
     .card {
@@ -66,133 +71,414 @@
       padding: 24px;
     }
 
-    .info-table {
-      width: 100%;
-      border-collapse: collapse;
+    .tabs {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
     }
 
-    .info-table th,
-    .info-table td {
-      padding: 18px 20px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .info-table th {
-      width: 35%;
-      background: var(--surface-alt);
-      font-weight: 700;
-      color: #0f172a;
-      vertical-align: top;
-    }
-
-    .info-table td {
-      background: var(--surface);
+    .tab-button {
+      padding: 12px 20px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: #f5f8fd;
       color: var(--text);
-      word-break: break-word;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
     }
 
-    .info-table tr:last-child th,
-    .info-table tr:last-child td {
-      border-bottom: none;
+    .tab-button.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
     }
 
-    @media (max-width: 720px) {
-      .page {
-        padding: 16px;
-      }
-
-      .hero,
-      .card-body {
-        padding: 20px;
-      }
-
-      .info-table {
-        width: 100%;
-      }
-
-      .info-table th,
-      .info-table td {
-        display: table-cell;
-        width: auto;
-        padding: 14px 18px;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .info-table tr {
-        display: table-row;
-        background: transparent;
-        border-radius: 0;
-        box-shadow: none;
-        margin-bottom: 0;
-        padding: 0;
-      }
+    .tab-panel {
+      display: none;
     }
 
-    @media (max-width: 480px) {
-      .page {
-        padding: 12px;
-      }
-
-      .hero h1 {
-        font-size: 1.9rem;
-      }
+    .tab-panel.active {
+      display: block;
+      animation: fadeIn 0.22s ease-in-out;
     }
 
-    .payment-section {
-      margin-top: 32px;
+    .details-panel {
+      display: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .info-card,
+    .status-card,
+    .service-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .info-card strong,
+    .status-card strong,
+    .service-card strong {
+      display: block;
+      font-size: 0.95rem;
+      color: #0f172a;
+      margin-bottom: 10px;
+    }
+
+    .info-card span,
+    .status-card span,
+    .service-card p {
+      color: var(--text);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .service-card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .service-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 96px;
+      justify-content: space-between;
+      cursor: pointer;
+      border-top: 3px solid transparent;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      padding: 12px;
+    }
+
+    .service-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary);
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
+    }
+
+    .service-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+    }
+
+    .service-card .media {
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(15, 107, 255, 0.14), rgba(31, 75, 153, 0.08));
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(15, 75, 153, 0.08);
+    }
+
+    .service-card .media::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.65), transparent 42%),
+                  radial-gradient(circle at bottom right, rgba(15, 107, 255, 0.14), transparent 28%);
+    }
+
+    .service-card .icon {
+      z-index: 1;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 10px 30px rgba(15, 75, 153, 0.08);
+    }
+
+    .service-card .icon svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+      stroke: currentColor;
+    }
+
+    .service-card .service-copy {
+      flex: 1;
+      text-align: left;
+    }
+
+    .service-card h3 {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #14213d;
+      line-height: 1.35;
+    }
+
+    .service-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.35;
+    }
+
+    .service-card small {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .service-status {
+      display: grid;
+      gap: 14px;
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 20px;
+      border: 1px solid #dbeafe;
+      background: #eff6ff;
+    }
+
+    .service-status-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid #dfe4ec;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .status-pending {
+      background: #fffbeb;
+      color: var(--warning);
+      border: 1px solid #fde68a;
+    }
+
+    .status-approved {
+      background: #ecfdf5;
+      color: var(--success);
+      border: 1px solid #bbf7d0;
+    }
+
+    .service-panel {
+      margin-top: 24px;
       padding: 24px;
+      border-radius: 20px;
+      border: 1px solid #dfe4ec;
+      background: #fff;
+    }
+
+    .service-form-heading {
+      margin: 24px 0 16px;
+      text-align: center;
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .service-form {
+      display: none;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .service-form.active {
+      display: grid;
+    }
+
+    .service-form label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1d2433;
+    }
+
+    .service-form input,
+    .service-form select,
+    .service-form textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #dfe4ec;
+      border-radius: 12px;
+      font-size: 15px;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .actions-row,
+    .payment-section {
+      margin-top: 28px;
+      padding: 20px;
+      border-radius: 20px;
       background: #f8fbff;
       border: 1px solid #dfe4ec;
-      border-radius: 16px;
     }
 
     .payment-section p {
-      margin: 0 0 20px;
-      font-size: 16px;
-      color: #14213d;
-      line-height: 1.6;
-      font-weight: 500;
+      margin: 0;
+      color: var(--text);
+      line-height: 1.7;
     }
 
     .upload-form {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
+      margin-top: 18px;
     }
 
     .file-input {
-      display: block;
       width: 100%;
-      padding: 14px;
+      padding: 16px;
+      border-radius: 14px;
       border: 2px dashed #b7bcc7;
-      border-radius: 10px;
-      background: #ffffff;
+      background: #fff;
       color: #5f697a;
       cursor: pointer;
       transition: border-color 0.2s;
-      font-size: 15px;
     }
 
     .file-input:hover {
-      border-color: #1f4b99;
+      border-color: var(--primary);
     }
 
+    .btn,
     .btn-upload {
-      align-self: flex-start;
-      padding: 12px 28px;
-      background: #1f4b99;
-      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 320px;
+      padding: 14px 20px;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: 14px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.97rem;
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.2s;
+      text-decoration: none;
+      transition: transform 0.16s ease, background 0.2s, box-shadow 0.2s;
     }
 
+    .btn:hover,
     .btn-upload:hover {
       background: #153775;
+      transform: translateY(-1px);
+      box-shadow: 0 16px 28px rgba(15, 23, 42, 0.12);
+    }
+
+    .btn-secondary {
+      width: auto;
+      padding: 12px 18px;
+      background: #ffffff;
+      border: 1px solid rgba(31, 75, 153, 0.16);
+      color: var(--primary);
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+      transition: transform 0.16s ease, background 0.2s, border-color 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #f5f8fd;
+      border-color: rgba(31, 75, 153, 0.24);
+      transform: translateY(-1px);
+    }
+
+    .details-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 360px;
+      margin: 24px auto 0;
+      padding: 14px 20px;
+      border-radius: 10px;
+      background: #0f172a;
+      border: 1px solid #0f172a;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+    }
+
+    .details-toggle::after {
+      content: "↓";
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .details-toggle.is-open::after {
+      content: "↑";
+    }
+
+    .details-toggle:hover {
+      background: #1e293b;
+      border-color: #1e293b;
+      color: #ffffff;
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.24);
+    }
+
+    @media (max-width: 980px) {
+      .service-card-grid,
+      .service-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page { padding: 16px; }
+      .hero { padding: 24px; }
+      .card-body { padding: 20px; }
+      .info-summary-grid,
+      .info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .info-card {
+        border-radius: 12px;
+        padding: 10px;
+      }
+      .info-card strong {
+        margin-bottom: 5px;
+        font-size: 0.78rem;
+        line-height: 1.25;
+      }
+      .info-card span {
+        font-size: 0.82rem;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+      }
     }
   </style>
 </head>
@@ -201,133 +487,484 @@
   <main class="page">
     <section class="hero">
       <h1>तुमची माहिती</h1>
+      <p>आपल्या घरपट्टी माहिती आणि सेवा विनंत्या येथे तपासा.</p>
     </section>
 
     <article class="card">
       <div class="card-body">
-        <table class="info-table">
-          <tbody>
-            {% for dbname, marathi in fields.items() %}
-            <tr>
-              <th>{{ marathi }}</th>
-              <td>{{ user[dbname] or '-' }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-
-        <div class="payment-section">
-          <div style="text-align: center; margin-bottom: 24px;">
-            {% if upi_qr_data %}
-            <div style="margin-bottom: 12px;">
-              <a href="{{ url_for('download_qr', sr_no=user['sr_no']) }}"
-                style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: #1f4b99; color: #fff; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 14px; box-shadow: 0 4px 10px rgba(31,75,153,.15);">
-                QR कोड डाउनलोड करा
-              </a>
-            </div>
-            <img src="{{ upi_qr_data }}" alt="UPI QR Card"
-              style="max-width: 360px; width: 100%; border-radius: 16px; border: 3px solid #dfe4ec; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-            {% else %}
-            <div style="padding: 24px; border: 2px dashed #b7bcc7; border-radius: 16px; background: #fff; color: #5f697a;">
-              UPI QR code not configured yet.
-            </div>
-            {% endif %}
-          </div>
-          <p style="text-align: center;">
-            कृपया आपल्या मोबाईल मध्ये असलेला UPI App वापरून वरील QR Card स्कॅन करून घरपट्टी भरा.<br>
-            पेमेंट झाल्या नंतर ग्रामपंचायत ला कळवा, किंव्हा खाली पेमेंटचा स्क्रीनशॉट अपलोड करा.
-          </p>
-          <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin: 14px 0 6px;">
-            <span style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:#5f259f; color:#fff; font-size:13px; font-weight:700;">PhonePe</span>
-            <span style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:#1a73e8; color:#fff; font-size:13px; font-weight:700;">Google Pay</span>
-            <span style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:#00baf2; color:#fff; font-size:13px; font-weight:700;">Paytm</span>
-            <span style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:#0f6bff; color:#fff; font-size:13px; font-weight:700;">BHIM</span>
-          </div>
-
-          {% if user['payment_ss'] %}
-
-          <div style="text-align: center; margin-top: 20px;">
-            <img src="/{{ user['payment_ss'] }}" alt="Payment Screenshot"
-              style="max-width: 400px; border-radius: 12px; border: 2px solid #dfe4ec;">
-            <p style="margin-top: 8px; color: #166534; font-weight: 700;">पेमेंट स्क्रीनशॉट यशस्वीरित्या अपलोड झाला आहे!
-            </p>
-          </div>
-
-          {% if user['payment_status'] != "Pending" %}
-          <div style="text-align: center; margin-top: 20px;">
-            <a href="{{ url_for('receipt', sr_no=user['sr_no']) }}" target="_blank"
-              style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: #1f4b99; color: #fff; border-radius: 10px; font-weight: 700; font-size: 16px; text-decoration: none; box-shadow: 0 4px 12px rgba(31,75,153,0.15); transition: background 0.2s;"
-              onmouseover="this.style.background='#153775'" onmouseout="this.style.background='#1f4b99'">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-                <polyline points="10 9 9 9 8 9"/>
-              </svg>
-              पावती पाहा (View Receipt)
-            </a>
-          </div>
-          {% else %}
-          <div style="text-align: center; margin-top: 16px;">
-            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; border-radius: 8px; font-weight: 600; font-size: 14px;">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              पावती मंजुरीच्या प्रतीक्षेत आहे (Approval Pending)
-            </span>
-          </div>
-          {% endif %}
-          {% else %}
-          <form class="upload-form" id="uploadForm">
-            <input type="file" id="screenshot" name="payment_ss" class="file-input" accept="image/*" required>
-            <button type="submit" class="btn-upload" style="align-self: center; width: 100%; max-width: 300px;">अपलोड
-              करा (Upload)</button>
-          </form>
-
-          <script>
-            document.getElementById('uploadForm').addEventListener('submit', function (e) {
-              e.preventDefault();
-              const fileInput = document.getElementById('screenshot');
-              if (fileInput.files.length === 0) return;
-
-              const formData = new FormData();
-              formData.append('payment_ss', fileInput.files[0]);
-
-              const btn = this.querySelector('.btn-upload');
-              const originalText = btn.textContent;
-              btn.textContent = 'अपलोड होत आहे... (Uploading...)';
-              btn.disabled = true;
-
-              fetch("{{ url_for('submit_payment_ss') }}", {
-                method: 'POST',
-                body: formData
-              })
-                .then(response => {
-                  if (response.ok || response.redirected) {
-                    window.location.reload();
-                  } else {
-                    alert('अपलोड अयशस्वी! (Upload failed!)');
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                  }
-                })
-                .catch(error => {
-                  console.error('Error:', error);
-                  alert('काहीतरी चूक झाली! (An error occurred!)');
-                  btn.textContent = originalText;
-                  btn.disabled = false;
-                });
-            });
-          </script>
-          {% endif %}
+        <div class="tabs">
+          <button type="button" class="tab-button active" data-tab="gharapatiTab">घरपट्टी</button>
+          <button type="button" class="tab-button" data-tab="servicesTab">सेवा</button>
         </div>
 
+        <div id="gharapatiTab" class="tab-panel active">
+          <div class="grid info-summary-grid">
+            <div class="info-card">
+              <strong>{{ fields.midkatkram }}</strong>
+              <span>{{ user.midkatkram or '-' }}</span>
+            </div>
+            <div class="info-card">
+              <strong>{{ fields.ghar_malkache_nav }}</strong>
+              <span>{{ user.ghar_malkache_nav or '-' }}</span>
+            </div>
+            <div class="info-card">
+              <strong>{{ fields.ekun_dene_rakkam }}</strong>
+              <span>{{ user.ekun_dene_rakkam or '-' }}</span>
+            </div>
+            <div class="info-card">
+              <strong>पेमेंट स्थिती</strong>
+              <span>{{ user.payment_status or 'प्रलंबित' }}</span>
+            </div>
+          </div>
+
+          <div class="details-panel" id="detailsPanel">
+            <div class="grid info-grid">
+              {% for dbname, marathi in fields.items() %}
+              <div class="info-card">
+                <strong>{{ marathi }}</strong>
+                <span>{{ user[dbname] or '-' }}</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <button type="button" class="btn-secondary details-toggle" id="toggleDetails">सर्व तपशील पहा</button>
+
+          <div class="payment-section">
+            <div style="text-align: center; margin-bottom: 24px;">
+              {% if upi_qr_data %}
+              <a href="{{ url_for('download_qr', sr_no=user['sr_no']) }}" class="btn" style="display:inline-flex; max-width:fit-content;">
+                QR कोड डाउनलोड करा
+              </a>
+              <div style="margin-top: 18px;">
+                <img src="{{ upi_qr_data }}" alt="UPI QR कार्ड" style="max-width: 360px; width: 100%; border-radius: 16px; border: 3px solid #dfe4ec; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+              </div>
+              {% else %}
+              <div style="padding: 24px; border: 2px dashed #b7bcc7; border-radius: 16px; background: #fff; color: #5f697a;">
+                कोणताही UPI QR कोड उपलब्ध नाही.
+              </div>
+              {% endif %}
+            </div>
+
+            {% if upi_qr_data %}
+            <p style="text-align: center; margin-bottom: 18px;">
+              कृपया आपल्या मोबाईलमध्ये असलेला UPI ॲप वापरून वरील QR कार्ड स्कॅन करून घरपट्टी भरा.
+            </p>
+            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin: 0 auto; max-width: 480px;">
+              <span style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#5f259f; color:#fff; font-size:13px; font-weight:700;">PhonePe</span>
+              <span style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#1a73e8; color:#fff; font-size:13px; font-weight:700;">Google Pay</span>
+              <span style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#00baf2; color:#fff; font-size:13px; font-weight:700;">Paytm</span>
+              <span style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#0f6bff; color:#fff; font-size:13px; font-weight:700;">BHIM</span>
+            </div>
+            {% endif %}
+
+            {% if user['payment_ss'] %}
+            <div style="text-align: center; margin-top: 22px;">
+              <img src="/{{ user['payment_ss'] }}" alt="Payment Screenshot" style="max-width: 420px; width: 100%; border-radius: 14px; border: 2px solid #dfe4ec;">
+              <p style="margin-top: 12px; color: var(--success); font-weight: 700;">पेमेंट स्क्रीनशॉट यशस्वीरित्या अपलोड झाला आहे!</p>
+            </div>
+            {% if user['payment_status'] != 'Pending' %}
+            <div style="text-align: center; margin-top: 20px;">
+              <a href="{{ url_for('receipt', sr_no=user['sr_no']) }}" target="_blank" class="btn" style="background:#0f6bff;">
+                पावती पाहा
+              </a>
+            </div>
+            {% else %}
+            <div style="text-align: center; margin-top: 18px;">
+              <span style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius: 999px; background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; font-weight:700;">पावती मंजुरीच्या प्रतीक्षेत आहे</span>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% if not user['payment_ss'] and upi_qr_data %}
+            <form class="upload-form" id="uploadForm">
+              <input type="file" id="screenshot" name="payment_ss" class="file-input" accept="image/*" required>
+              <button type="submit" class="btn-upload">अपलोड करा</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+
+        <div id="servicesTab" class="tab-panel">
+          <div class="service-panel">
+            <div class="service-card-grid">
+              <div class="service-card" data-form="birthForm">
+                <div class="media">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="8" r="4"></circle>
+                      <path d="M5 21a7 7 0 0 1 14 0"></path>
+                      <path d="M9 8h.01"></path>
+                      <path d="M15 8h.01"></path>
+                    </svg>
+                  </span>
+                </div>
+                <div class="service-copy">
+                  <h3>जन्म दाखला मागणी</h3>
+                  <p>आपल्या बाळाच्या जन्म दाखल्यासाठी अर्ज करा.</p>
+                </div>
+              </div>
+              <div class="service-card" data-form="deathForm">
+                <div class="media">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 3 4 11l8 10 8-10-8-8Z"></path>
+                      <path d="M12 7v8"></path>
+                      <path d="M8 11h8"></path>
+                    </svg>
+                  </span>
+                </div>
+                <div class="service-copy">
+                  <h3>मृत्यू दाखला मागणी</h3>
+                  <p>मृत्यू दाखला जारी करण्यासाठी अर्ज करा.</p>
+                </div>
+              </div>
+              <div class="service-card" data-form="marriageForm">
+                <div class="media">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="9" cy="14" r="5"></circle>
+                      <circle cx="15" cy="14" r="5"></circle>
+                      <path d="M12 7 9.5 4.5h5L12 7Z"></path>
+                    </svg>
+                  </span>
+                </div>
+                <div class="service-copy">
+                  <h3>विवाह दाखला मागणी</h3>
+                  <p>विवाह दाखल्यासाठी आवश्यक माहिती सादर करा.</p>
+                </div>
+              </div>
+              <div class="service-card" data-form="povertyLineForm">
+                <div class="media">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="5" y="4" width="14" height="17" rx="2"></rect>
+                      <path d="M9 4.5h6"></path>
+                      <path d="M8 10h8"></path>
+                      <path d="M8 14h8"></path>
+                      <path d="M8 18h5"></path>
+                    </svg>
+                  </span>
+                </div>
+                <div class="service-copy">
+                  <h3>दारिद्र्य रेखेखाली असल्याचा दाखला मागणी</h3>
+                  <p>दारिद्र्य रेखेखाली असल्याचा दाखला मिळविण्यासाठी अर्ज करा.</p>
+                </div>
+              </div>
+              <div class="service-card" data-form="noDuesForm">
+                <div class="media">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="9"></circle>
+                      <path d="m8 12 3 3 5-6"></path>
+                    </svg>
+                  </span>
+                </div>
+                <div class="service-copy">
+                  <h3>थकबाकी नसल्याचा दाखला मागणी</h3>
+                  <p>थकबाकी नसल्याचा प्रमाणपत्र मिळविण्यासाठी अर्ज करा.</p>
+                </div>
+              </div>
+            </div>
+
+            <div id="activeServiceHeading" class="service-form-heading" style="display:none;"></div>
+
+            <div class="service-forms">
+              <form class="service-form" id="birthForm" action="{{ url_for('submit_janam_dakhla_request') }}" method="post">
+                <input type="hidden" name="service_type" value="birth">
+                <div class="service-grid">
+                  <div>
+                    <label for="applicant_name">अर्जदार नाव *</label>
+                    <input type="text" id="applicant_name" name="applicant_name" required placeholder="अर्ज करणाऱ्या व्यक्तीचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="mobile_number">मोबाईल नंबर *</label>
+                    <input type="text" id="mobile_number" name="mobile_number" required placeholder="अर्जदाराचा व्हॉट्सॲप मोबाइल नंबर प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="child_name">बाळाचे पूर्ण नाव (मराठी मध्ये) *</label>
+                    <input type="text" id="child_name" name="child_name" required placeholder="दाखल्यावरील बाळाचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="father_name">वडिलांचे पूर्ण नाव (मराठी मध्ये) *</label>
+                    <input type="text" id="father_name" name="father_name" required placeholder="दाखल्यावरील वडिलांचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="mother_name">आईचे पूर्ण नाव (मराठी मध्ये) *</label>
+                    <input type="text" id="mother_name" name="mother_name" required placeholder="दाखल्यावरील आईचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="birth_date">जन्म दिनांक *</label>
+                    <input type="date" id="birth_date" name="birth_date" required>
+                  </div>
+                  <div>
+                    <label for="child_gender">बाळाचे लिंग *</label>
+                    <select id="child_gender" name="child_gender" required>
+                      <option value="">निवडा</option>
+                      <option value="Male">पुरुष</option>
+                      <option value="Female">स्त्री</option>
+                      <option value="Other">इतर</option>
+                    </select>
+                  </div>
+                </div>
+                <button type="submit" class="btn">मागणी सादर करा</button>
+              </form>
+
+              <form class="service-form" id="deathForm" action="{{ url_for('submit_janam_dakhla_request') }}" method="post">
+                <input type="hidden" name="service_type" value="death">
+                <div class="service-grid">
+                  <div>
+                    <label for="applicant_name_death">अर्जदार नाव *</label>
+                    <input type="text" id="applicant_name_death" name="applicant_name" required placeholder="अर्ज करणाऱ्या व्यक्तीचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="mobile_number_death">मोबाईल नंबर *</label>
+                    <input type="text" id="mobile_number_death" name="mobile_number" required placeholder="अर्जदाराचा व्हॉट्सॲप मोबाइल नंबर प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="deceased_name">मृत व्यक्तीचे पूर्ण नाव (मराठी मध्ये) *</label>
+                    <input type="text" id="deceased_name" name="deceased_name" required placeholder="दाखल्यावरील मृत व्यक्तीचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="deceased_gender">मृत व्यक्तीचे लिंग *</label>
+                    <select id="deceased_gender" name="deceased_gender" required>
+                      <option value="">निवडा</option>
+                      <option value="Male">पुरुष</option>
+                      <option value="Female">स्त्री</option>
+                      <option value="Other">इतर</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="death_date">मृत्यू दिनांक *</label>
+                    <input type="date" id="death_date" name="death_date" required>
+                  </div>
+                </div>
+                <button type="submit" class="btn">मागणी सादर करा</button>
+              </form>
+
+              <form class="service-form" id="marriageForm" action="{{ url_for('submit_janam_dakhla_request') }}" method="post">
+                <input type="hidden" name="service_type" value="marriage">
+                <div class="service-grid">
+                  <div>
+                    <label for="applicant_name_marriage">अर्जदार नाव *</label>
+                    <input type="text" id="applicant_name_marriage" name="applicant_name" required placeholder="अर्ज करणाऱ्या व्यक्तीचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="mobile_number_marriage">मोबाईल नंबर *</label>
+                    <input type="text" id="mobile_number_marriage" name="mobile_number" required placeholder="अर्जदाराचा व्हॉट्सॲप मोबाइल नंबर प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="husband_name">पतीचे नाव (मराठी मध्ये) *</label>
+                    <input type="text" id="husband_name" name="husband_name" required placeholder="दाखल्यावरील पतीचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="wife_name">पत्नीचे नाव (मराठी मध्ये) *</label>
+                    <input type="text" id="wife_name" name="wife_name" required placeholder="दाखल्यावरील पत्नीचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="marriage_date">विवाह दिनांक *</label>
+                    <input type="date" id="marriage_date" name="marriage_date" required>
+                  </div>
+                  <div>
+                    <label for="marriage_place">विवाह ठिकाण *</label>
+                    <input type="text" id="marriage_place" name="marriage_place" required placeholder="विवाह ठिकाण प्रविष्ट करा">
+                  </div>
+                </div>
+                <button type="submit" class="btn">मागणी सादर करा</button>
+              </form>
+
+              <form class="service-form" id="povertyLineForm" action="{{ url_for('submit_janam_dakhla_request') }}" method="post">
+                <input type="hidden" name="service_type" value="poverty_line">
+                <div class="service-grid">
+                  <div>
+                    <label for="applicant_name_pl">अर्जदार नाव *</label>
+                    <input type="text" id="applicant_name_pl" name="applicant_name" required placeholder="अर्ज करणाऱ्या व्यक्तीचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="mobile_number_pl">मोबाईल क्रमांक *</label>
+                    <input type="text" id="mobile_number_pl" name="mobile_number" required placeholder="अर्जदाराचा व्हॉट्सॲप मोबाईल क्रमांक प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="cert_name_marathi_pl">दाखल्यावर येणारे व्यक्तीचे नाव (मराठी मध्ये) *</label>
+                    <input type="text" id="cert_name_marathi_pl" name="certificate_name_marathi" required placeholder="दाखल्यावर येणारे व्यक्तीचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="cert_name_english_pl">दाखल्यावर येणारे व्यक्तीचे नाव (इंग्रजी मध्ये) *</label>
+                    <input type="text" id="cert_name_english_pl" name="certificate_name_english" required placeholder="दाखल्यावर येणारे व्यक्तीचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="family_head_marathi_pl">कुटुंब प्रमुखाचे नाव (मराठी मध्ये)</label>
+                    <input type="text" id="family_head_marathi_pl" name="family_head_marathi" placeholder="कुटुंब प्रमुखाचे संपूर्ण नाव प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="poverty_line_number">दारिद्र्यरेषेतील नंबर</label>
+                    <input type="text" id="poverty_line_number" name="poverty_line_number" placeholder="दारिद्र्यरेषेतील नंबर प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="relation_with_family_head">कुटुंबप्रमुखाशी नाते (मराठी मध्ये)*</label>
+                    <input type="text" id="relation_with_family_head" name="relation_with_family_head" required placeholder="कुटुंबप्रमुखाशी नाते लिहा">
+                  </div>
+                </div>
+                <button type="submit" class="btn">मागणी सादर करा</button>
+              </form>
+
+              <form class="service-form" id="noDuesForm" action="{{ url_for('submit_janam_dakhla_request') }}" method="post">
+                <input type="hidden" name="service_type" value="no_dues">
+                <div class="service-grid">
+                  <div>
+                    <label for="applicant_name_marathi_nd">अर्जदाराचे नाव (मराठीमध्ये) *</label>
+                    <input type="text" id="applicant_name_marathi_nd" name="applicant_name_marathi" required placeholder="नमुना ८ मध्ये नोंद मालकाचे नाव मराठीमध्ये प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="applicant_name_english_nd">अर्जदाराचे नाव (इंग्रजीमध्ये) *</label>
+                    <input type="text" id="applicant_name_english_nd" name="applicant_name_english" required placeholder="नमुना ८ मध्ये नोंद मालकाचे नाव इंग्रजीमध्ये प्रविष्ट करा">
+                  </div>
+                  <div>
+                    <label for="mobile_number_nd">मोबाईल क्रमांक *</label>
+                    <input type="text" id="mobile_number_nd" name="mobile_number" required placeholder="अर्जदाराचा व्हॉट्सॲप मोबाईल क्रमांक प्रविष्ट करा">
+                  </div>
+                </div>
+                <button type="submit" class="btn">मागणी सादर करा</button>
+              </form>
+            </div>
+          </div>
+
+          {% if service_requests is defined %}
+          <div class="service-status">
+            <h2>सेवा स्थिती</h2>
+            {% if service_requests %}
+              {% for req in service_requests %}
+              <div class="service-status-item">
+                <div>
+                  <strong>
+                    {% if req['service_type'] == 'death' %}
+                      मृत्यू दाखला मागणी
+                    {% elif req['service_type'] == 'no_dues' %}
+                      थकबाकी नसल्याचा दाखला मागणी
+                    {% elif req['service_type'] == 'poverty_line' %}
+                      दारिद्र्य रेखेखाली असल्याचा दाखला मागणी
+                    {% elif req['service_type'] == 'marriage' %}
+                      विवाह दाखला मागणी
+                    {% elif req['service_type'] == 'birth' %}
+                      जन्म दाखला मागणी
+                    {% else %}
+                      सेवा मागणी
+                    {% endif %}
+                    #{{ req['id'] }}
+                  </strong>
+                  <div>
+                    {% if req['service_type'] == 'death' %}
+                      {{ req['death_date'] or '-' }} · {{ req['deceased_gender'] or '-' }}
+                    {% elif req['service_type'] == 'no_dues' %}
+                      {{ req['applicant_name_marathi'] or '-' }} · {{ req['mobile_number'] or '-' }}
+                    {% elif req['service_type'] == 'poverty_line' %}
+                      {{ req['certificate_name_marathi'] or '-' }} · {{ req['poverty_line_number'] or '-' }}
+                    {% elif req['service_type'] == 'marriage' %}
+                      {{ req['marriage_date'] or '-' }} · {{ req['marriage_place'] or '-' }}
+                    {% else %}
+                      {{ req['birth_date'] or '-' }} · {{ req['child_gender'] or '-' }}
+                    {% endif %}
+                  </div>
+                </div>
+                <span class="status-pill {{ 'status-approved' if req['status'] == 'Approved' else 'status-pending' }}">{{ 'मंजूर' if req['status'] == 'Approved' else 'प्रलंबित' }}</span>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="service-status-item" style="justify-content:center;">
+                कोणतीही सेवा विनंती नाही.
+              </div>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
       </div>
     </article>
   </main>
+
+  <script>
+    const toggleDetails = document.getElementById('toggleDetails');
+    const detailsPanel = document.getElementById('detailsPanel');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    const serviceCards = document.querySelectorAll('.service-card');
+    const serviceForms = document.querySelectorAll('.service-form');
+    const activeServiceHeading = document.getElementById('activeServiceHeading');
+    const uploadForm = document.getElementById('uploadForm');
+
+    if (toggleDetails) {
+      toggleDetails.addEventListener('click', () => {
+        const isOpen = detailsPanel.style.display === 'block';
+        detailsPanel.style.display = isOpen ? 'none' : 'block';
+        toggleDetails.textContent = isOpen ? 'सर्व तपशील पहा' : 'तपशील लपवा';
+        toggleDetails.classList.toggle('is-open', !isOpen);
+        if (!isOpen) {
+          detailsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const target = button.dataset.tab;
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabPanels.forEach(panel => panel.classList.remove('active'));
+        button.classList.add('active');
+        document.getElementById(target).classList.add('active');
+      });
+    });
+
+    serviceCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const targetId = card.dataset.form;
+        const targetForm = document.getElementById(targetId);
+        if (!targetForm) return;
+
+        serviceCards.forEach(item => item.classList.remove('active'));
+        serviceForms.forEach(form => form.classList.remove('active'));
+
+        card.classList.add('active');
+        targetForm.classList.add('active');
+        activeServiceHeading.textContent = card.querySelector('h3').textContent;
+        activeServiceHeading.style.display = 'block';
+        targetForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    if (uploadForm) {
+      uploadForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('screenshot');
+        if (!fileInput || fileInput.files.length === 0) return;
+
+        const formData = new FormData();
+        formData.append('payment_ss', fileInput.files[0]);
+
+        const btn = this.querySelector('.btn-upload');
+        const originalText = btn.textContent;
+        btn.textContent = 'अपलोड होत आहे...';
+        btn.disabled = true;
+
+        fetch("{{ url_for('submit_payment_ss') }}", {
+          method: 'POST',
+          body: formData
+        })
+          .then(response => {
+            if (response.ok || response.redirected) {
+              window.location.reload();
+            } else {
+              alert('अपलोड अयशस्वी झाला!');
+              btn.textContent = originalText;
+              btn.disabled = false;
+            }
+          })
+          .catch(() => {
+            alert('काहीतरी चूक झाली!');
+            btn.textContent = originalText;
+            btn.disabled = false;
+          });
+      });
+    }
+  </script>
 </body>
 
 </html>

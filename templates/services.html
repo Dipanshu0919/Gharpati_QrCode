@@ -1,0 +1,165 @@
+{% extends "menubar.html" %}
+
+{% block title %}सेवा विनंती{% endblock %}
+
+{% block page_title %}सेवा विनंती{% endblock %}
+
+{% block page_description %}खालील सर्व सेवा विनंती तपासा आणि ज्या प्रकारच्या सेवेची आवश्यकता आहे ती निवडा.{% endblock %}
+
+{% block extra_styles %}
+  .service-tabs button { min-width: 120px; }
+  .table-wrap { overflow-x: auto; border-radius: 18px; margin-top: 16px; }
+  .request-table { min-width: 1024px; }
+  .request-detail { display: block; color: #1d2433; margin-top: 4px; font-size: 14px; }
+  .request-note { margin: 14px 0 0; color: #475569; font-size: 0.95rem; }
+{% endblock %}
+
+{% block content %}
+  <div class="service-tabs">
+    <button class="service-tab active" data-filter="all">सर्व</button>
+    <button class="service-tab" data-filter="birth">जन्म दाखला</button>
+    <button class="service-tab" data-filter="death">मृत्यू दाखला</button>
+    <button class="service-tab" data-filter="marriage">विवाह दाखला</button>
+    <button class="service-tab" data-filter="poverty_line">दारिद्र्य रेखेखाली दाखला</button>
+    <button class="service-tab" data-filter="no_dues">थकबाकी नसल्याचा दाखला</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="request-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>सेवा</th>
+          <th>अर्जदार</th>
+          <th>मोबाईल</th>
+          <th>प्राथमिक माहिती</th>
+          <th>इतर माहिती</th>
+          <th>स्थिती</th>
+          <th>क्रिया</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if requests %}
+          {% for req in requests %}
+          <tr data-type="{{ req['service_type'] }}" data-request-id="{{ req['id'] }}">
+            <td>{{ req['id'] }}</td>
+            <td>
+              {% if req['service_type'] == 'birth' %}
+                जन्म दाखला
+              {% elif req['service_type'] == 'death' %}
+                मृत्यू दाखला
+              {% elif req['service_type'] == 'marriage' %}
+                विवाह दाखला
+              {% elif req['service_type'] == 'poverty_line' %}
+                दारिद्र्य रेखेखाली दाखला
+              {% elif req['service_type'] == 'no_dues' %}
+                थकबाकी नसल्याचा दाखला
+              {% else %}
+                सेवा
+              {% endif %}
+            </td>
+            <td>{{ req['applicant_name'] or req['applicant_name_marathi'] or req['applicant_name_english'] or '-' }}</td>
+            <td>{{ req['mobile_number'] or '-' }}</td>
+            <td>
+              {% if req['service_type'] == 'birth' %}
+                <strong>बाळाचे नाव:</strong> {{ req['child_name'] or '-' }}<br>
+                <strong>वडिलांचे नाव:</strong> {{ req['father_name'] or '-' }}<br>
+                <strong>आईचे नाव:</strong> {{ req['mother_name'] or '-' }}
+              {% elif req['service_type'] == 'death' %}
+                <strong>मृत्यू व्यक्ती:</strong> {{ req['deceased_name'] or '-' }}<br>
+                <strong>लिंग:</strong> {{ req['deceased_gender'] or '-' }}
+              {% elif req['service_type'] == 'marriage' %}
+                <strong>पतीचे नाव:</strong> {{ req['husband_name'] or '-' }}<br>
+                <strong>पत्नीचे नाव:</strong> {{ req['wife_name'] or '-' }}
+              {% elif req['service_type'] == 'poverty_line' %}
+                <strong>दाखल्यावरील नाव:</strong> {{ req['certificate_name_marathi'] or '-' }}<br>
+                <strong>इंग्रजी नाव:</strong> {{ req['certificate_name_english'] or '-' }}<br>
+                <strong>कुटुंब प्रमुख:</strong> {{ req['family_head_marathi'] or '-' }}
+              {% elif req['service_type'] == 'no_dues' %}
+                <strong>मराठी नाव:</strong> {{ req['applicant_name_marathi'] or '-' }}<br>
+                <strong>इंग्रजी नाव:</strong> {{ req['applicant_name_english'] or '-' }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if req['service_type'] == 'birth' %}
+                <span class="request-detail">जन्म दिनांक: {{ req['birth_date'] or '-' }}</span>
+                <span class="request-detail">लिंग: {{ req['child_gender'] or '-' }}</span>
+              {% elif req['service_type'] == 'death' %}
+                <span class="request-detail">मृत्यू दिनांक: {{ req['death_date'] or '-' }}</span>
+                <span class="request-detail">लिंग: {{ req['deceased_gender'] or '-' }}</span>
+              {% elif req['service_type'] == 'marriage' %}
+                <span class="request-detail">विवाह दिनांक: {{ req['marriage_date'] or '-' }}</span>
+                <span class="request-detail">विवाह ठिकाण: {{ req['marriage_place'] or '-' }}</span>
+              {% elif req['service_type'] == 'poverty_line' %}
+                <span class="request-detail">दारिद्र्यरेषेतील नंबर: {{ req['poverty_line_number'] or '-' }}</span>
+                <span class="request-detail">कुटुंबप्रमुखाशी नाते: {{ req['relation_with_family_head'] or '-' }}</span>
+              {% elif req['service_type'] == 'no_dues' %}
+                <span class="request-detail">थकबाकी नसल्याचा दाखला</span>
+              {% else %}
+                <span class="request-detail">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if req['status'] == 'Approved' %}
+                <span class="status-pill status-approved">Approved</span>
+              {% else %}
+                <span class="status-pill status-pending">Pending</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if req['status'] != 'Approved' %}
+              <button type="button" class="btn-primary approve-btn" data-id="{{ req['id'] }}">Approved करा</button>
+              {% else %}
+              -
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align:center; padding:24px; color: var(--muted);">कोणतीही सेवा विनंती उपलब्ध नाही.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <p class="request-note">वरच्या टॅबवर क्लिक करून सेवा प्रकार फिल्टर करा. प्रत्येक रेकॉर्डमध्ये सेवा प्रकारानुसार मुख्य माहिती आणि अतिरिक्त माहिती दर्शवली आहे.</p>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.querySelectorAll('.service-tab').forEach(button => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.service-tab').forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      const filter = button.dataset.filter;
+      document.querySelectorAll('tbody tr[data-type]').forEach(row => {
+        row.style.display = filter === 'all' || row.dataset.type === filter ? '' : 'none';
+      });
+    });
+  });
+
+  document.querySelectorAll('.approve-btn').forEach(button => {
+    button.addEventListener('click', function () {
+      const requestId = this.dataset.id;
+      if (!confirm('या विनंतीला खात्रीने Approved करायचे आहे का?')) return;
+      fetch('/services/approve/' + requestId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            const row = document.querySelector('tr[data-request-id="' + requestId + '"]');
+            if (row) {
+              row.querySelector('td:nth-child(7)').innerHTML = '<span class="status-pill status-approved">Approved</span>';
+              row.querySelector('td:nth-child(8)').innerText = '-';
+            }
+          } else {
+            alert('विनंती Approved करण्यात अयशस्वी.');
+          }
+        })
+        .catch(() => alert('विनंती Approved करण्यात अयशस्वी.'));
+    });
+  });
+</script>
+{% endblock %}
