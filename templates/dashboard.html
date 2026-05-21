@@ -828,8 +828,11 @@
         <div id="loading-msg" class="empty">Loading records...</div>
         <div id="table-section" style="display:none;">
           <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
-            <input type="text" id="table-search" class="value" placeholder="Search all records..."
+            <input type="text" id="table-search" class="value" placeholder="Search by Sr. No, Name, Property, etc..."
               style="max-width:280px;text-align:left;">
+            <button id="search-btn" style="padding:8px 16px;background:#1e3a8a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;">
+              Search
+            </button>
             <span id="search-status" style="font-size:13px;color:var(--muted);display:none;">Searching...</span>
           </div>
           <div id="pagination-top" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;"></div>
@@ -1115,20 +1118,30 @@
         if (!e.target.closest('.dropdown')) closeAllDropdowns();
       });
 
-      // ── Server-side search with debounce ─────────────────────
+      // ── Server-side search with button click ─────────────────────
       const searchStatus = document.getElementById('search-status');
-      document.getElementById('table-search').addEventListener('input', (e) => {
-        const q = e.target.value.trim();
-        clearTimeout(searchDebounce);
+      const searchBtn = document.getElementById('search-btn');
+      const searchInput = document.getElementById('table-search');
+      
+      const performSearch = () => {
+        const q = searchInput.value.trim();
         if (q === currentQuery) return;
         searchStatus.style.display = '';
-        searchDebounce = setTimeout(() => {
-          currentQuery = q;
-          currentPage = 1;
-          const url = q ? `/dashboard/1?q=${encodeURIComponent(q)}` : '/dashboard/1';
-          history.pushState({page: 1, q}, '', url);
-          loadUsers(1, q).then(() => { searchStatus.style.display = 'none'; });
-        }, 350);
+        currentQuery = q;
+        currentPage = 1;
+        const url = q ? `/dashboard/1?q=${encodeURIComponent(q)}` : '/dashboard/1';
+        history.pushState({page: 1, q}, '', url);
+        loadUsers(1, q).then(() => { searchStatus.style.display = 'none'; });
+      };
+      
+      // Search button click event
+      searchBtn.addEventListener('click', performSearch);
+      
+      // Allow Enter key in search input to trigger search
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          performSearch();
+        }
       });
     </script>
 {% endblock %}
