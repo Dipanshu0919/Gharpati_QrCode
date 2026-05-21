@@ -1169,7 +1169,7 @@ def api_users():
     q = request.args.get('q', '').strip()
     conn, c = get_db()
     search_fields = [
-        'midkatkram', 'ghar_malkache_nav', 'gharpatti_magil', 'gharpatti_chalu', 'gharpatti_ekun',
+        'sr_no', 'midkatkram', 'ghar_malkache_nav', 'gharpatti_magil', 'gharpatti_chalu', 'gharpatti_ekun',
         'divabatti_magil', 'divabatti_chalu', 'divabatti_ekun',
         'arogya_magil', 'arogya_chalu', 'arogya_ekun',
         'panipatti_magil', 'panipatti_chalu', 'panipatti_ekun', 'ekun_dene_rakkam'
