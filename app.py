@@ -152,36 +152,6 @@ def init_db():
             FOREIGN KEY(user_sr_no) REFERENCES users(sr_no)
         )
     ''')
-    existing_columns = [row['name'] for row in c.execute("PRAGMA table_info(janam_dakhla)")]
-    required_columns = {
-        'service_type': "TEXT NOT NULL DEFAULT 'birth'",
-        'applicant_name': 'TEXT',
-        'applicant_name_marathi': 'TEXT',
-        'applicant_name_english': 'TEXT',
-        'mobile_number': 'TEXT',
-        'child_name': 'TEXT',
-        'father_name': 'TEXT',
-        'mother_name': 'TEXT',
-        'birth_date': 'TEXT',
-        'child_gender': 'TEXT',
-        'deceased_name': 'TEXT',
-        'deceased_gender': 'TEXT',
-        'death_date': 'TEXT',
-        'husband_name': 'TEXT',
-        'wife_name': 'TEXT',
-        'marriage_date': 'TEXT',
-        'marriage_place': 'TEXT',
-        'certificate_name_marathi': 'TEXT',
-        'certificate_name_english': 'TEXT',
-        'family_head_marathi': 'TEXT',
-        'poverty_line_number': 'TEXT',
-        'relation_with_family_head': 'TEXT',
-        'status': 'TEXT DEFAULT "Pending"',
-        'created_at': 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
-    }
-    for column, definition in required_columns.items():
-        if column not in existing_columns:
-            c.execute(f"ALTER TABLE janam_dakhla ADD COLUMN {column} {definition}")
     c.execute('''
         CREATE TABLE IF NOT EXISTS admins (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1163,31 +1133,46 @@ def dashboard(page=1):
 @app.route('/api/users')
 @login_required
 def api_users():
-    page  = max(1, int(request.args.get('page', 1)))
-    limit = 300
-    offset = (page - 1) * limit
-    q = request.args.get('q', '').strip()
+    page       = max(1, int(request.args.get('page', 1)))
+    limit      = 300
+    offset     = (page - 1) * limit
+    q          = request.args.get('q', '').strip()
+    filter_val = request.args.get('filter', '').strip()
+    sort_val   = request.args.get('sort', '').strip()
+
     conn, c = get_db()
-    search_fields = [
-        'sr_no', 'midkatkram', 'ghar_malkache_nav', 'gharpatti_magil', 'gharpatti_chalu', 'gharpatti_ekun',
-        'divabatti_magil', 'divabatti_chalu', 'divabatti_ekun',
-        'arogya_magil', 'arogya_chalu', 'arogya_ekun',
-        'panipatti_magil', 'panipatti_chalu', 'panipatti_ekun', 'ekun_dene_rakkam'
-    ]
+    conditions, params = [], []
+
     if q:
-        like = f'%{q}%'
-        where = ' OR '.join([f'{f} LIKE ?' for f in search_fields])
-        params = [like] * len(search_fields)
-        c.execute(f'SELECT COUNT(*) FROM users WHERE {where}', params)
-        total = c.fetchone()[0]
-        c.execute(f'SELECT * FROM users WHERE {where} LIMIT ? OFFSET ?', params + [limit, offset])
-    else:
-        c.execute('SELECT COUNT(*) FROM users')
-        total = c.fetchone()[0]
-        c.execute('SELECT * FROM users LIMIT ? OFFSET ?', (limit, offset))
+        search_fields = [
+            'sr_no','midkatkram','ghar_malkache_nav',
+            'gharpatti_magil','gharpatti_chalu','gharpatti_ekun',
+            'divabatti_magil','divabatti_chalu','divabatti_ekun',
+            'arogya_magil','arogya_chalu','arogya_ekun',
+            'panipatti_magil','panipatti_chalu','panipatti_ekun','ekun_dene_rakkam'
+        ]
+        conditions.append('(' + ' OR '.join(f'{f} LIKE ?' for f in search_fields) + ')')
+        params.extend([f'%{q}%'] * len(search_fields))
+
+    if filter_val == 'pending':
+        conditions.append('(payment_ss IS NULL OR payment_ss = "")')
+    elif filter_val == 'paid':
+        conditions.append('(payment_ss IS NOT NULL AND payment_ss != "" AND payment_status = "Pending")')
+    elif filter_val == 'approved':
+        conditions.append('payment_status != "Pending"')
+
+    where = ('WHERE ' + ' AND '.join(conditions)) if conditions else ''
+    order = {
+        'asc':  'ORDER BY CAST(ekun_dene_rakkam AS REAL) ASC',
+        'desc': 'ORDER BY CAST(ekun_dene_rakkam AS REAL) DESC',
+    }.get(sort_val, 'ORDER BY sr_no ASC')
+
+    c.execute(f'SELECT COUNT(*) FROM users {where}', params)
+    total = c.fetchone()[0]
+    c.execute(f'SELECT * FROM users {where} {order} LIMIT ? OFFSET ?', params + [limit, offset])
     users = [dict(row) for row in c.fetchall()]
     conn.close()
-    return jsonify({'users': users, 'total': total, 'page': page, 'limit': limit, 'q': q})
+    return jsonify({'users': users, 'total': total, 'page': page, 'limit': limit})
 
 
 @app.route('/delete_all_records', methods=['POST'])
