@@ -7,1141 +7,715 @@
 
 {% block extra_styles %}
 :root {
-      --border: #b7bcc7;
-      --field-bg: #ffffff;
-      --text: #1d2433;
-      --muted: #5f697a;
-      --panel: #fafafa;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      color: var(--text);
-      background: #fff;
-    }
-
-    .page {
-      display: flex;
-      min-height: 100vh;
-      width: 100%;
-      max-width: 100%;
-      margin: 0;
-      border: none;
-      background: #fff;
-    }
-
-    .sidebar {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      width: 50px;
-      min-width: 50px;
-      padding: 16px 6px;
-      border-right: 1px solid #dfe4ec;
-      background: #f7f9fc;
-      transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease;
-      overflow: hidden;
-      flex-shrink: 0;
-      z-index: 110;
-    }
-
-    .sidebar:hover {
-      width: 140px;
-      min-width: 140px;
-      padding: 16px 12px;
-    }
-
-    .sidebar .nav-text {
-      display: none;
-    }
-
-    .sidebar:hover .nav-text {
-      display: inline;
-    }
-
-    .sidebar .nav-item {
-      justify-content: center;
-      padding: 10px 0;
-    }
-
-    .sidebar:hover .nav-item {
-      justify-content: flex-start;
-      padding: 10px 12px;
-    }
-
-    .icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .sidebar nav {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .nav-item {
-      display: inline-flex;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 10px 12px;
-      border-radius: 8px;
-      background: transparent;
-      color: #1d2433;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 14px;
-      border: 1px solid transparent;
-      transition: background 0.2s ease, border-color 0.2s ease;
-    }
-
-    .nav-item:hover,
-    .nav-item.active {
-      background: #1f4b99;
-      color: #fff;
-      border-color: #1f4b99;
-    }
-
-    .main-content {
-      flex: 1;
-      padding: 0;
-      min-width: 0;
-    }
-
-    .header {
-      padding: 14px 18px 8px;
-      border-bottom: 1px solid #eceff4;
-    }
-
-    .header h1 {
-      margin: 0;
-      font-size: 28px;
-      line-height: 1.1;
-      color: #14213d;
-    }
-
-    .meta {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .content {
-      padding: 14px 18px 20px;
-    }
-
-    .actions-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      width: 100%;
-      margin-bottom: 18px;
-      padding: 18px;
-      border: 1px solid #dfe4ec;
-      border-radius: 14px;
-      background: #f8fbff;
-    }
-
-    .actions {
-      width: 100%;
-      max-width: 100%;
-      flex: 1 1 0;
-      min-width: 0;
-      margin: 0;
-      padding: 0;
-      border: 0;
-      background: transparent;
-    }
-
-    .actions summary {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      min-height: 40px;
-      padding: 0.65rem 1rem;
-      border-radius: 6px;
-      background: #1f4b99;
-      color: #fff;
-      font-weight: 700;
-      font-size: 0.95rem;
-      list-style: none;
-      user-select: none;
-      text-decoration: none;
-    }
-
-    .actions summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .csv-toggle {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 40px;
-      padding: 0.65rem 1rem;
-      border: 0;
-      border-radius: 6px;
-      background: #1f4b99;
-      color: #fff;
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      text-decoration: none;
-      align-self: flex-start;
-    }
-
-    .danger-form {
-      margin: 0;
-      align-self: flex-start;
-    }
-
-    .danger-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 40px;
-      padding: 0.65rem 1rem;
-      border: 0;
-      border-radius: 6px;
-      background: #b42318;
-      color: #fff;
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .actions .hint {
-      margin: 12px 0 14px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .actions form {
-      margin-top: 14px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 14px 12px;
-    }
-
-    .field {
-      min-width: 0;
-    }
-
-    .label {
-      display: block;
-      margin: 0 0 6px;
-      font-size: 15px;
-      font-weight: 700;
-      color: #31384a;
-      text-align: center;
-    }
-
-    .value {
-      width: 100%;
-      height: 32px;
-      padding: 6px 10px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: var(--field-bg);
-      color: var(--text);
-      font-size: 15px;
-      line-height: 1.2;
-      text-align: center;
-    }
-
-    .status {
-      display: none;
-      margin-top: 12px;
-      padding: 10px 12px;
-      border: 1px solid #cfe3d1;
-      background: #edf8ee;
-      color: #215c2d;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    .status.error {
-      border-color: #f1c2c2;
-      background: #fdeeee;
-      color: #8d1f1f;
-    }
-
-    .table-wrap {
-      border: 1px solid #dfe4ec;
-      background: #fff;
-    }
-
-    table {
-      width: 100%;
-      min-width: 80%;
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      border: 1px solid #d6dbe3;
-      padding: 10px 12px;
-      font-size: 15px;
-      vertical-align: middle;
-    }
-
-    th {
-      position: sticky;
-      top: 0;
-      background: #2f5f9a;
-      color: #fff;
-      text-align: center;
-      font-weight: 700;
-      z-index: 10;
-    }
-
-    td {
-      background: #fff;
-      text-align: center;
-    }
-
-    .row-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 34px;
-      padding: 0.5rem 0.9rem;
-      border: 0;
-      border-radius: 6px;
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      font-size: 14px;
-    }
-
-    .btn-edit {
-      background: #1f4b99;
-    }
-
-    .btn-qr {
-      background: #0f8b59;
-    }
-
-    .btn-delete {
-      background: #b42318;
-    }
-
-    .btn-secondary {
-      background: #667085;
-    }
-
-    .edit-row {
-      display: none;
-      background: #f7f9fc;
-    }
-
-    .edit-row.open {
-      display: table-row;
-    }
-
-    .edit-panel {
-      padding: 14px;
-    }
-
-    .edit-panel h3 {
-      margin: 0 0 12px;
-      font-size: 18px;
-      color: #14213d;
-    }
-
-    .edit-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .edit-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 14px;
-    }
-
-    .small-input {
-      width: 100%;
-      min-height: 34px;
-      padding: 6px 10px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: #fff;
-      color: var(--text);
-      font-size: 14px;
-      text-align: center;
-    }
-
-    .empty {
-      padding: 20px 0 6px;
-      color: var(--muted);
-      font-size: 15px;
-    }
-
-    .section-title {
-      margin: 0 0 12px;
-      font-size: 20px;
-      color: #14213d;
-    }
-
-    .csv-help {
-      display: none;
-      margin: 0 0 18px;
-      padding: 18px;
-      border: 1px solid #dfe4ec;
-      border-radius: 10px;
-      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-      max-width: 100%;
-    }
-
-    .csv-help.open {
-      display: block;
-    }
-
-    .csv-help-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
-    }
-
-    .csv-help p {
-      margin: 0 0 12px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .csv-help-note {
-      margin: 0 0 16px;
-      padding: 12px 14px;
-      border-left: 4px solid #1f4b99;
-      background: #eef4ff;
-      color: #344054;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    .csv-fields {
-      display: inline-table;
-      width: auto;
-      min-width: 0;
-      max-width: 100%;
-      table-layout: auto;
-      border-collapse: collapse;
-    }
-
-    .csv-fields th,
-    .csv-fields td {
-      padding: 8px 10px;
-      border: 1px solid #d6dbe3;
-      font-size: 14px;
-      text-align: left;
-      vertical-align: top;
-      word-break: break-word;
-    }
-
-    .csv-fields th {
-      background: #2f5f9a;
-      color: #fff;
-    }
-
-    .csv-fields th:first-child,
-    .csv-fields td:first-child {
-      width: 20%;
-    }
-
-    .csv-fields th:last-child,
-    .csv-fields td:last-child {
-      width: 20%;
-    }
-
-    .csv-sample-wrap {
-      margin: 0 0 16px;
-      overflow-x: auto;
-    }
-
-    .csv-sample {
-      width: 100%;
-      min-width: 1180px;
-      border-collapse: collapse;
-    }
-
-    .csv-sample th,
-    .csv-sample td {
-      padding: 8px 10px;
-      border: 1px solid #d6dbe3;
-      font-size: 13px;
-      text-align: center;
-      vertical-align: middle;
-      white-space: nowrap;
-    }
-
-    .csv-sample th {
-      position: sticky;
-      top: 0;
-      background: #2f5f9a;
-      color: #fff;
-      font-weight: 700;
-    }
-
-    .csv-sample tbody tr:nth-child(even) td {
-      background: #f8fbff;
-    }
-
-    .csv-sample .name-cell {
-      text-align: left;
-      white-space: normal;
-    }
-
-    .csv-upload {
-      margin: 0 0 16px;
-      padding: 16px;
-      border: 1px solid #dfe4ec;
-      border-radius: 8px;
-      background: #fff;
-    }
-
-    .csv-upload form {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .csv-upload form .field {
-      flex: 1 1 320px;
-      min-width: 220px;
-      margin: 0;
-    }
-
-    .csv-upload form button[type="submit"] {
-      flex: 0 0 auto;
-      margin-top: 0;
-    }
-
-    .csv-upload .hint {
-      margin: 10px 0 0;
-      width: 100%;
-    }
-
-    @media (max-width: 900px) {
-      .grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 560px) {
-      body {
-        padding: 10px;
-      }
-
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Dropdown Menu Styles */
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
-
-    .btn-dots {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      padding: 0;
-      border: none;
-      border-radius: 50%;
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-    }
-
-    .btn-dots:hover,
-    .btn-dots.active {
-      background: #e2e8f0;
-      color: var(--text);
-    }
-
-    .dropdown-menu {
-      position: absolute;
-      right: 0;
-      top: calc(100% + 4px);
-      z-index: 100;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      min-width: 140px;
-      padding: 4px;
-      display: none;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .dropdown-menu.show {
-      display: flex;
-    }
-
-    .dropdown-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 4px;
-      background: transparent;
-      color: var(--text);
-      font-size: 14px;
-      cursor: pointer;
-      text-decoration: none;
-      text-align: left;
-      box-sizing: border-box;
-    }
-
-    .dropdown-item:hover {
-      background: #f1f5f9;
-    }
-
-    .dropdown-item svg {
-      flex-shrink: 0;
-    }
+  --border: #b7bcc7;
+  --field-bg: #ffffff;
+  --text: #1d2433;
+  --muted: #5f697a;
+  --panel: #fafafa;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; padding: 0;
+  font-family: Arial, sans-serif;
+  color: var(--text);
+  background: #fff;
+}
+
+.page {
+  display: flex; min-height: 100vh;
+  width: 100%; max-width: 100%;
+  margin: 0; border: none; background: #fff;
+}
+
+.sidebar {
+  position: sticky; top: 0; height: 100vh;
+  width: 50px; min-width: 50px; padding: 16px 6px;
+  border-right: 1px solid #dfe4ec; background: #f7f9fc;
+  transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease;
+  overflow: hidden; flex-shrink: 0; z-index: 110;
+}
+.sidebar:hover { width: 140px; min-width: 140px; padding: 16px 12px; }
+.sidebar .nav-text { display: none; }
+.sidebar:hover .nav-text { display: inline; }
+.sidebar .nav-item { justify-content: center; padding: 10px 0; }
+.sidebar:hover .nav-item { justify-content: flex-start; padding: 10px 12px; }
+
+.icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.sidebar nav { display: flex; flex-direction: column; gap: 8px; }
+
+.nav-item {
+  display: inline-flex; align-items: center; justify-content: flex-start;
+  padding: 10px 12px; border-radius: 8px;
+  background: transparent; color: #1d2433;
+  text-decoration: none; font-weight: 700; font-size: 14px;
+  border: 1px solid transparent;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.nav-item:hover, .nav-item.active { background: #1f4b99; color: #fff; border-color: #1f4b99; }
+
+.main-content { flex: 1; padding: 0; min-width: 0; }
+
+.header { padding: 14px 18px 8px; border-bottom: 1px solid #eceff4; }
+.header h1 { margin: 0; font-size: 28px; line-height: 1.1; color: #14213d; }
+.meta { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+
+.content { padding: 14px 18px 20px; }
+
+.actions-row {
+  display: flex; justify-content: space-between;
+  gap: 10px; align-items: flex-start; flex-wrap: wrap;
+  width: 100%; margin-bottom: 18px; padding: 18px;
+  border: 1px solid #dfe4ec; border-radius: 14px; background: #f8fbff;
+}
+
+.actions {
+  width: 100%; max-width: 100%; flex: 1 1 0; min-width: 0;
+  margin: 0; padding: 0; border: 0; background: transparent;
+}
+.actions summary {
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; min-height: 40px; padding: 0.65rem 1rem;
+  border-radius: 6px; background: #1f4b99; color: #fff;
+  font-weight: 700; font-size: 0.95rem;
+  list-style: none; user-select: none; text-decoration: none;
+}
+.actions summary::-webkit-details-marker { display: none; }
+
+.csv-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 40px; padding: 0.65rem 1rem;
+  border: 0; border-radius: 6px; background: #1f4b99; color: #fff;
+  font-weight: 700; font-size: 0.95rem; cursor: pointer;
+  text-decoration: none; align-self: flex-start;
+}
+
+.danger-form { margin: 0; align-self: flex-start; }
+.danger-button {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 40px; padding: 0.65rem 1rem;
+  border: 0; border-radius: 6px; background: #b42318; color: #fff;
+  font-weight: 700; font-size: 0.95rem; cursor: pointer;
+}
+
+.actions .hint { margin: 12px 0 14px; color: var(--muted); font-size: 14px; }
+.actions form { margin-top: 14px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px 12px;
+}
+
+.field { min-width: 0; }
+
+.label {
+  display: block; margin: 0 0 6px; font-size: 15px;
+  font-weight: 700; color: #31384a; text-align: center;
+}
+
+.value {
+  width: 100%; height: 32px; padding: 6px 10px;
+  border: 1px solid var(--border); border-radius: 4px;
+  background: var(--field-bg); color: var(--text);
+  font-size: 15px; line-height: 1.2; text-align: center;
+}
+
+.status {
+  display: none; margin-top: 12px; padding: 10px 12px;
+  border: 1px solid #cfe3d1; background: #edf8ee;
+  color: #215c2d; border-radius: 6px; font-size: 14px;
+}
+.status.error { border-color: #f1c2c2; background: #fdeeee; color: #8d1f1f; }
+
+.table-wrap { border: 1px solid #dfe4ec; background: #fff; }
+
+table { width: 100%; min-width: 80%; border-collapse: collapse; }
+
+th, td {
+  border: 1px solid #d6dbe3; padding: 10px 12px;
+  font-size: 15px; vertical-align: middle;
+}
+th {
+  position: sticky; top: 0;
+  background: #2f5f9a; color: #fff;
+  text-align: center; font-weight: 700; z-index: 10;
+}
+td { background: #fff; text-align: center; }
+
+.row-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 34px; padding: 0.5rem 0.9rem;
+  border: 0; border-radius: 6px; color: #fff;
+  font-weight: 700; cursor: pointer; text-decoration: none; font-size: 14px;
+}
+.btn-edit     { background: #1f4b99; }
+.btn-qr       { background: #0f8b59; }
+.btn-delete   { background: #b42318; }
+.btn-secondary{ background: #667085; }
+
+.edit-row { display: none; background: #f7f9fc; }
+.edit-row.open { display: table-row; }
+
+.edit-panel { padding: 14px; }
+.edit-panel h3 { margin: 0 0 12px; font-size: 18px; color: #14213d; }
+
+.edit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px; margin-top: 12px;
+}
+
+.edit-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+.small-input {
+  width: 100%; min-height: 34px; padding: 6px 10px;
+  border: 1px solid var(--border); border-radius: 4px;
+  background: #fff; color: var(--text); font-size: 14px; text-align: center;
+}
+
+.empty { padding: 20px 0 6px; color: var(--muted); font-size: 15px; }
+.section-title { margin: 0 0 12px; font-size: 20px; color: #14213d; }
+
+.csv-help {
+  display: none; margin: 0 0 18px; padding: 18px;
+  border: 1px solid #dfe4ec; border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  max-width: 100%;
+}
+.csv-help.open { display: block; }
+
+.csv-help-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 12px;
+  flex-wrap: wrap; margin-bottom: 14px;
+}
+.csv-help p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.csv-help-note {
+  margin: 0 0 16px; padding: 12px 14px;
+  border-left: 4px solid #1f4b99; background: #eef4ff;
+  color: #344054; border-radius: 6px; font-size: 14px;
+}
+
+.csv-fields {
+  display: inline-table; width: auto; min-width: 0;
+  max-width: 100%; table-layout: auto; border-collapse: collapse;
+}
+.csv-fields th, .csv-fields td {
+  padding: 8px 10px; border: 1px solid #d6dbe3;
+  font-size: 14px; text-align: left; vertical-align: top; word-break: break-word;
+}
+.csv-fields th { background: #2f5f9a; color: #fff; }
+.csv-fields th:first-child, .csv-fields td:first-child { width: 20%; }
+.csv-fields th:last-child,  .csv-fields td:last-child  { width: 20%; }
+
+.csv-sample-wrap { margin: 0 0 16px; overflow-x: auto; }
+.csv-sample { width: 100%; min-width: 1180px; border-collapse: collapse; }
+.csv-sample th, .csv-sample td {
+  padding: 8px 10px; border: 1px solid #d6dbe3;
+  font-size: 13px; text-align: center; vertical-align: middle; white-space: nowrap;
+}
+.csv-sample th { position: sticky; top: 0; background: #2f5f9a; color: #fff; font-weight: 700; }
+.csv-sample tbody tr:nth-child(even) td { background: #f8fbff; }
+.csv-sample .name-cell { text-align: left; white-space: normal; }
+
+.csv-upload {
+  margin: 0 0 16px; padding: 16px;
+  border: 1px solid #dfe4ec; border-radius: 8px; background: #fff;
+}
+.csv-upload form { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.csv-upload form .field { flex: 1 1 320px; min-width: 220px; margin: 0; }
+.csv-upload form button[type="submit"] { flex: 0 0 auto; margin-top: 0; }
+.csv-upload .hint { margin: 10px 0 0; width: 100%; }
+
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { body { padding: 10px; } .grid { grid-template-columns: 1fr; } }
+
+/* Dropdown */
+.dropdown { position: relative; display: inline-block; }
+.btn-dots {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; padding: 0;
+  border: none; border-radius: 50%;
+  background: transparent; color: var(--muted); cursor: pointer;
+}
+.btn-dots:hover, .btn-dots.active { background: #e2e8f0; color: var(--text); }
+
+.dropdown-menu {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 100;
+  background: #ffffff; border: 1px solid #e2e8f0;
+  border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  min-width: 140px; padding: 4px;
+  display: none; flex-direction: column; gap: 2px;
+}
+.dropdown-menu.show { display: flex; }
+
+.dropdown-item {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 8px 12px;
+  border: none; border-radius: 4px;
+  background: transparent; color: var(--text);
+  font-size: 14px; cursor: pointer;
+  text-decoration: none; text-align: left; box-sizing: border-box;
+}
+.dropdown-item:hover { background: #f1f5f9; }
+.dropdown-item svg { flex-shrink: 0; }
+
+/* Filter / Sort */
+.filter-select, .sort-select {
+  height: 34px; padding: 6px 10px;
+  border: 1px solid var(--border); border-radius: 4px;
+  background: var(--field-bg); color: var(--text);
+  font-size: 14px; cursor: pointer; font-weight: 600;
+}
+.filter-select:focus, .sort-select:focus {
+  outline: none; border-color: #1f4b99;
+  box-shadow: 0 0 0 2px rgba(31,75,153,0.1);
+}
 {% endblock %}
 
 {% block content %}
 {% set preserve_fields = ['midkatkram', 'ghar_malkache_nav'] %}
-        <div class="actions-row">
-          <details class="actions">
-            <summary>Add New Record</summary>
-            <p class="hint">Fill in the details below to add a user.</p>
-            <form id="add-user-form">
-              <div class="grid">
-                {% for dbname, marathi in fields.items() %}
-                <div class="field">
-                  <label class="label">{{ marathi }}</label>
-                  <input class="value" type="text" name="{{ dbname }}" value="0">
-                </div>
-                {% endfor %}
-              </div>
-              <div style="margin-top: 14px;">
-                <button type="submit"
-                  style="padding: 0.65rem 1rem; border: 0; border-radius: 6px; background: #1f4b99; color: #fff; font-weight: 700; cursor: pointer;">Save</button>
-              </div>
-            </form>
-            <div id="add-user-status" class="status">Record saved.</div>
-          </details>
 
-          <button type="button" class="csv-toggle" id="csv-help-toggle">CSV Upload</button>
-          <form action="{{ url_for('delete_all_records') }}" method="post" class="danger-form"
-            onsubmit="return confirm('This will permanently delete all records and payment screenshots. Continue?');">
-            <button type="submit" class="danger-button">Delete All Records</button>
-          </form>
+<div class="actions-row">
+  <details class="actions">
+    <summary>Add New Record</summary>
+    <p class="hint">Fill in the details below to add a user.</p>
+    <form id="add-user-form">
+      <div class="grid">
+        {% for dbname, marathi in fields.items() %}
+        <div class="field">
+          <label class="label">{{ marathi }}</label>
+          <input class="value" type="text" name="{{ dbname }}" value="0">
         </div>
-
-        <div id="csv-help" class="csv-help">
-          <div class="csv-help-header">
-            <h3 class="section-title" style="margin-bottom: 0;">CSV Format Guide</h3>
-          </div>
-          <p class="csv-help-note">खाली दर्शवलेली अचूक हेडर नावे वापरा. ​​CSV मधील प्रत्येक ओळ एक रेकॉर्ड मानली जाईल.</p>
-          <h4 style="margin: 0 0 10px; font-size: 16px; color: #14213d;">Sample CSV Preview</h4>
-          <div class="csv-sample-wrap">
-            <table class="csv-sample">
-              <thead>
-                <tr>
-                  <th>midkatkram</th>
-                  <th>ghar_malkache_nav</th>
-                  <th>gharpatti_magil</th>
-                  <th>gharpatti_chalu</th>
-                  <th>gharpatti_ekun</th>
-                  <th>divabatti_magil</th>
-                  <th>divabatti_chalu</th>
-                  <th>divabatti_ekun</th>
-                  <th>arogya_magil</th>
-                  <th>arogya_chalu</th>
-                  <th>arogya_ekun</th>
-                  <th>panipatti_magil</th>
-                  <th>panipatti_chalu</th>
-                  <th>panipatti_ekun</th>
-                  <th>ekun_dene_rakkam</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>101</td>
-                  <td class="name-cell">राम पाटील</td>
-                  <td>1200</td>
-                  <td>600</td>
-                  <td>1800</td>
-                  <td>300</td>
-                  <td>150</td>
-                  <td>450</td>
-                  <td>200</td>
-                  <td>100</td>
-                  <td>300</td>
-                  <td>500</td>
-                  <td>250</td>
-                  <td>750</td>
-                  <td>3300</td>
-                </tr>
-                <tr>
-                  <td>102</td>
-                  <td class="name-cell">सीमा देशमुख</td>
-                  <td>1000</td>
-                  <td>400</td>
-                  <td>1400</td>
-                  <td>250</td>
-                  <td>250</td>
-                  <td>500</td>
-                  <td>180</td>
-                  <td>170</td>
-                  <td>350</td>
-                  <td>400</td>
-                  <td>200</td>
-                  <td>600</td>
-                  <td>2850</td>
-                </tr>
-                <tr>
-                  <td>103</td>
-                  <td class="name-cell">प्रवीण जाधव</td>
-                  <td>700</td>
-                  <td>200</td>
-                  <td>900</td>
-                  <td>150</td>
-                  <td>150</td>
-                  <td>300</td>
-                  <td>100</td>
-                  <td>150</td>
-                  <td>250</td>
-                  <td>300</td>
-                  <td>150</td>
-                  <td>450</td>
-                  <td>1900</td>
-                </tr>
-                <tr>
-                  <td>104</td>
-                  <td class="name-cell">Amit Sharma</td>
-                  <td>1100</td>
-                  <td>500</td>
-                  <td>1600</td>
-                  <td>220</td>
-                  <td>200</td>
-                  <td>420</td>
-                  <td>140</td>
-                  <td>140</td>
-                  <td>280</td>
-                  <td>500</td>
-                  <td>300</td>
-                  <td>800</td>
-                  <td>3100</td>
-                </tr>
-                <tr>
-                  <td>105</td>
-                  <td class="name-cell">Priya Verma</td>
-                  <td>900</td>
-                  <td>200</td>
-                  <td>1100</td>
-                  <td>180</td>
-                  <td>210</td>
-                  <td>390</td>
-                  <td>120</td>
-                  <td>140</td>
-                  <td>260</td>
-                  <td>450</td>
-                  <td>250</td>
-                  <td>700</td>
-                  <td>2450</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="csv-upload">
-            <form action="{{ url_for('add_user_csv') }}" method="post" enctype="multipart/form-data">
-              <div class="field" style="max-width: 420px;">
-                <input id="csv-file" class="small-input" type="file" name="file" accept=".csv,text/csv" required>
-              </div>
-              <button type="submit"
-                style="padding: 0.65rem 1rem; border: 0; border-radius: 6px; background: #1f4b99; color: #fff; font-weight: 700; cursor: pointer;">Upload
-                CSV</button>
-              <p class="hint">
-                CSV file should contain these exact headers: <code>midkatkram</code>, <code>ghar_malkache_nav</code>,
-                <code>gharpatti_magil</code>, <code>gharpatti_chalu</code>, <code>gharpatti_ekun</code>,
-                <code>divabatti_magil</code>, <code>divabatti_chalu</code>, <code>divabatti_ekun</code>,
-                <code>arogya_magil</code>,<code>arogya_chalu</code>, <code>arogya_ekun</code>,
-                <code>panipatti_magil</code>, <code>panipatti_chalu</code>, <code>panipatti_ekun</code>,
-                <code>ekun_dene_rakkam</code>.
-              </p>
-              <a href="{{ url_for('download_sample_csv') }}" class="csv-toggle"
-                style="background:#0f8b59; text-decoration:none; margin-top: 6px;">Download Sample CSV</a>
-            </form>
-          </div>
-          <table class="csv-fields">
-            <thead>
-              <tr>
-                <th>CSV Header</th>
-                <th>Meaning</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for dbname, marathi in fields.items() %}
-              <tr>
-                <td><code>{{ dbname }}</code></td>
-                <td>{{ marathi }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-
-        <div id="empty-msg" class="empty" style="display:none;">No records available.</div>
-        <div id="loading-msg" class="empty">Loading records...</div>
-        <div id="table-section" style="display:none;">
-          <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
-            <input type="text" id="table-search" class="value" placeholder="Search by Sr. No, Name, Property, etc..."
-              style="max-width:280px;text-align:left;">
-            <button id="search-btn" style="padding:8px 16px;background:#1e3a8a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;">
-              Search
-            </button>
-            <span id="search-status" style="font-size:13px;color:var(--muted);display:none;">Searching...</span>
-          </div>
-          <div id="pagination-top" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;"></div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 40px; padding-left: 4px; padding-right: 4px;">Sr.</th>
-                  {% for dbname, marathi in fields.items() %}
-                  <th>{{ marathi }}</th>
-                  {% endfor %}
-                  <th>Payment</th>
-                  <th style="width: 44px; padding-left: 2px; padding-right: 2px;"></th>
-                </tr>
-              </thead>
-              <tbody id="users-tbody"></tbody>
-            </table>
-          </div>
-        </div>
+        {% endfor %}
       </div>
-    </div>
+      <div style="margin-top:14px;">
+        <button type="submit"
+          style="padding:0.65rem 1rem;border:0;border-radius:6px;background:#1f4b99;color:#fff;font-weight:700;cursor:pointer;">
+          Save
+        </button>
+      </div>
+    </form>
+    <div id="add-user-status" class="status">Record saved.</div>
+  </details>
 
-    <script>
-      // Static field map injected from server (small, non-user data)
-      const FIELD_ENTRIES = {{ fields.items() | list | tojson }};
-      const FIELD_COUNT = FIELD_ENTRIES.length;
+  <button type="button" class="csv-toggle" id="csv-help-toggle">CSV Upload</button>
 
-      // ── DOM refs ──────────────────────────────────────────────
-      const form       = document.getElementById('add-user-form');
-      const statusBox  = document.getElementById('add-user-status');
-      const csvHelpToggle = document.getElementById('csv-help-toggle');
-      const csvHelp    = document.getElementById('csv-help');
-      const tbody      = document.getElementById('users-tbody');
-      const tableSection = document.getElementById('table-section');
-      const emptyMsg   = document.getElementById('empty-msg');
-      const loadingMsg = document.getElementById('loading-msg');
+  <form action="{{ url_for('delete_all_records') }}" method="post" class="danger-form"
+        onsubmit="return confirm('This will permanently delete all records and payment screenshots. Continue?');">
+    <button type="submit" class="danger-button">Delete All Records</button>
+  </form>
+</div>
 
-      // ── Helpers ───────────────────────────────────────────────
-      function esc(str) {
-        return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+<div id="csv-help" class="csv-help">
+  <div class="csv-help-header">
+    <h3 class="section-title" style="margin-bottom:0;">CSV Format Guide</h3>
+  </div>
+  <p class="csv-help-note">Use the exact header names shown below. Each row in the CSV will be treated as one record.</p>
+  <h4 style="margin:0 0 10px;font-size:16px;color:#14213d;">Sample CSV Preview</h4>
+  <div class="csv-sample-wrap">
+    <table class="csv-sample">
+      <thead>
+        <tr>
+          <th>midkatkram</th><th>ghar_malkache_nav</th>
+          <th>gharpatti_magil</th><th>gharpatti_chalu</th><th>gharpatti_ekun</th>
+          <th>divabatti_magil</th><th>divabatti_chalu</th><th>divabatti_ekun</th>
+          <th>arogya_magil</th><th>arogya_chalu</th><th>arogya_ekun</th>
+          <th>panipatti_magil</th><th>panipatti_chalu</th><th>panipatti_ekun</th>
+          <th>ekun_dene_rakkam</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>101</td><td class="name-cell">Ram Patil</td><td>1200</td><td>600</td><td>1800</td><td>300</td><td>150</td><td>450</td><td>200</td><td>100</td><td>300</td><td>500</td><td>250</td><td>750</td><td>3300</td></tr>
+        <tr><td>102</td><td class="name-cell">Seema Deshmukh</td><td>1000</td><td>400</td><td>1400</td><td>250</td><td>250</td><td>500</td><td>180</td><td>170</td><td>350</td><td>400</td><td>200</td><td>600</td><td>2850</td></tr>
+        <tr><td>103</td><td class="name-cell">Praveen Jadhav</td><td>700</td><td>200</td><td>900</td><td>150</td><td>150</td><td>300</td><td>100</td><td>150</td><td>250</td><td>300</td><td>150</td><td>450</td><td>1900</td></tr>
+        <tr><td>104</td><td class="name-cell">Amit Sharma</td><td>1100</td><td>500</td><td>1600</td><td>220</td><td>200</td><td>420</td><td>140</td><td>140</td><td>280</td><td>500</td><td>300</td><td>800</td><td>3100</td></tr>
+        <tr><td>105</td><td class="name-cell">Priya Verma</td><td>900</td><td>200</td><td>1100</td><td>180</td><td>210</td><td>390</td><td>120</td><td>140</td><td>260</td><td>450</td><td>250</td><td>700</td><td>2450</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="csv-upload">
+    <form action="{{ url_for('add_user_csv') }}" method="post" enctype="multipart/form-data">
+      <div class="field" style="max-width:420px;">
+        <input id="csv-file" class="small-input" type="file" name="file" accept=".csv,text/csv" required>
+      </div>
+      <button type="submit"
+        style="padding:0.65rem 1rem;border:0;border-radius:6px;background:#1f4b99;color:#fff;font-weight:700;cursor:pointer;">
+        Upload CSV
+      </button>
+      <p class="hint">
+        Required headers: <code>midkatkram</code>, <code>ghar_malkache_nav</code>,
+        <code>gharpatti_magil</code>, <code>gharpatti_chalu</code>, <code>gharpatti_ekun</code>,
+        <code>divabatti_magil</code>, <code>divabatti_chalu</code>, <code>divabatti_ekun</code>,
+        <code>arogya_magil</code>, <code>arogya_chalu</code>, <code>arogya_ekun</code>,
+        <code>panipatti_magil</code>, <code>panipatti_chalu</code>, <code>panipatti_ekun</code>,
+        <code>ekun_dene_rakkam</code>.
+      </p>
+      <a href="{{ url_for('download_sample_csv') }}" class="csv-toggle"
+         style="background:#0f8b59;text-decoration:none;margin-top:6px;">
+        Download Sample CSV
+      </a>
+    </form>
+  </div>
+  <table class="csv-fields">
+    <thead><tr><th>CSV Header</th><th>Meaning</th></tr></thead>
+    <tbody>
+      {% for dbname, marathi in fields.items() %}
+      <tr><td><code>{{ dbname }}</code></td><td>{{ marathi }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Search + Filter + Sort — always visible -->
+<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+  <input type="text" id="table-search" class="value"
+         placeholder="Search by Sr. No, Name, Property..."
+         style="max-width:280px;text-align:left;">
+  <button id="search-btn"
+          style="padding:8px 16px;background:#1e3a8a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;">
+    Search
+  </button>
+  <span id="search-status" style="font-size:13px;color:var(--muted);display:none;">Searching...</span>
+
+  <select id="status-filter" class="filter-select">
+    <option value="">📋 Filter by Status</option>
+    <option value="all">All</option>
+    <option value="pending">Pending (not paid)</option>
+    <option value="paid">Paid (not approved)</option>
+    <option value="approved">Approved</option>
+  </select>
+
+  <select id="sort-order" class="sort-select">
+    <option value="">🔄 Sort by Amount</option>
+    <option value="desc">Highest to Lowest</option>
+    <option value="asc">Lowest to Highest</option>
+  </select>
+</div>
+
+<div id="empty-msg" class="empty" style="display:none;">No records available.</div>
+<div id="loading-msg" class="empty">Loading records...</div>
+
+<div id="table-section" style="display:none;">
+  <div id="pagination-top" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40px;padding-left:4px;padding-right:4px;">Sr.</th>
+          {% for dbname, marathi in fields.items() %}
+          <th>{{ marathi }}</th>
+          {% endfor %}
+          <th>Payment</th>
+          <th style="width:44px;padding-left:2px;padding-right:2px;"></th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const FIELD_ENTRIES = {{ fields.items() | list | tojson }};
+  const FIELD_COUNT   = FIELD_ENTRIES.length;
+
+  const form        = document.getElementById('add-user-form');
+  const statusBox   = document.getElementById('add-user-status');
+  const csvHelpToggle = document.getElementById('csv-help-toggle');
+  const csvHelp     = document.getElementById('csv-help');
+  const tbody       = document.getElementById('users-tbody');
+  const tableSection= document.getElementById('table-section');
+  const emptyMsg    = document.getElementById('empty-msg');
+  const loadingMsg  = document.getElementById('loading-msg');
+  const searchStatus= document.getElementById('search-status');
+  const searchBtn   = document.getElementById('search-btn');
+  const searchInput = document.getElementById('table-search');
+  const filterSelect= document.getElementById('status-filter');
+  const sortSelect  = document.getElementById('sort-order');
+
+  function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── State ─────────────────────────────────────────────
+  let currentPage   = {{ initial_page }};
+  let currentQuery  = '';
+  let currentFilter = '';
+  let currentSort   = '';
+  const LIMIT = 300;
+
+  // ── Render ────────────────────────────────────────────
+  function renderUsers(users) {
+    loadingMsg.style.display = 'none';
+    if (!users || users.length === 0) {
+      emptyMsg.style.display = '';
+      tableSection.style.display = 'none';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+    tableSection.style.display = 'block';
+
+    tbody.innerHTML = users.map(u => {
+      const sr = esc(u.sr_no ?? '-');
+      const fieldCells = FIELD_ENTRIES.map(([k]) => `<td>${esc(u[k]) || '-'}</td>`).join('');
+
+      let paymentCell;
+      if (u.payment_ss) {
+        const viewSS = `<a href="/photo/${u.sr_no}" target="_blank" class="btn btn-secondary"
+          style="background:#0f172a;white-space:nowrap;padding:4px 10px;font-size:13px;">View SS</a>`;
+        let approveBtn;
+        if (u.payment_status === 'Pending') {
+          approveBtn = `<a href="/approve/payment/${u.sr_no}"
+            style="display:inline-block;padding:4px 10px;background:#059669;color:#fff;border-radius:6px;font-weight:700;font-size:13px;text-decoration:none;white-space:nowrap;"
+            onclick="return confirm('Approve payment for this user?');">Approve</a>`;
+        } else {
+          approveBtn = `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;border-radius:6px;font-weight:700;font-size:12px;white-space:nowrap;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            Approved</span>`;
+        }
+        paymentCell = `<td><div style="display:flex;flex-direction:column;align-items:center;gap:6px;">${viewSS}${approveBtn}</div></td>`;
+      } else {
+        paymentCell = `<td><span style="color:#9ca3af;font-size:13px;">None</span></td>`;
       }
 
-      // ── Render users from JSON ────────────────────────────────
-      function renderUsers(users) {
-        loadingMsg.style.display = 'none';
-        if (!users || users.length === 0) {
-          emptyMsg.style.display = '';
-          tableSection.style.display = 'none';
-          return;
-        }
-        emptyMsg.style.display = 'none';
-        tableSection.style.display = '';
+      const editInputs = FIELD_ENTRIES.map(([k, label]) => `
+        <div class="field">
+          <label class="label">${esc(label)}</label>
+          <input class="small-input" type="text" name="${k}" value="${esc(u[k] ?? '')}">
+        </div>`).join('');
 
-        const rows = users.map(u => {
-          const sr = esc(u.sr_no ?? '-');
-          const fieldCells = FIELD_ENTRIES.map(([k]) => `<td>${esc(u[k]) || '-'}</td>`).join('');
-
-          // Payment cell
-          let paymentCell;
-          if (u.payment_ss) {
-            const viewSS = `<a href="/photo/${u.sr_no}" target="_blank" class="btn btn-secondary"
-              style="background:#0f172a;white-space:nowrap;padding:4px 10px;font-size:13px;">View SS</a>`;
-            let approveBtn;
-            if (u.payment_status === 'Pending') {
-              approveBtn = `<a href="/approve/payment/${u.sr_no}"
-                style="display:inline-block;padding:4px 10px;background:#059669;color:#fff;border-radius:6px;font-weight:700;font-size:13px;text-decoration:none;white-space:nowrap;"
-                onclick="return confirm('Approve payment for this user?');">Approve</a>`;
-            } else {
-              approveBtn = `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;border-radius:6px;font-weight:700;font-size:12px;white-space:nowrap;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                Approved</span>`;
-            }
-            paymentCell = `<td><div style="display:flex;flex-direction:column;align-items:center;gap:6px;">${viewSS}${approveBtn}</div></td>`;
-          } else {
-            paymentCell = `<td><span style="color:#9ca3af;font-size:13px;">None</span></td>`;
-          }
-
-          // Edit form inputs
-          const editInputs = FIELD_ENTRIES.map(([k, label]) => `
-            <div class="field">
-              <label class="label">${esc(label)}</label>
-              <input class="small-input" type="text" name="${k}" value="${esc(u[k] ?? '')}">
-            </div>`).join('');
-
-          return `
-          <tr class="record-row">
-            <td style="padding-left:4px;padding-right:4px;">${sr}</td>
-            ${fieldCells}
-            ${paymentCell}
-            <td style="padding-left:2px;padding-right:2px;">
-              <div class="dropdown">
-                <button type="button" class="btn-dots" onclick="toggleDropdown(event,'dropdown-${u.sr_no}')" title="More actions">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
-                  </svg>
+      return `
+      <tr class="record-row">
+        <td style="padding-left:4px;padding-right:4px;">${sr}</td>
+        ${fieldCells}
+        ${paymentCell}
+        <td style="padding-left:2px;padding-right:2px;">
+          <div class="dropdown">
+            <button type="button" class="btn-dots" onclick="toggleDropdown(event,'dropdown-${u.sr_no}')" title="More actions">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+              </svg>
+            </button>
+            <div id="dropdown-${u.sr_no}" class="dropdown-menu">
+              <a href="/qr_code/${u.sr_no}" class="dropdown-item" onclick="closeAllDropdowns()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg> Download QR
+              </a>
+              <a href="/user/${u.sr_no}" target="_blank" class="dropdown-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                </svg> View User
+              </a>
+              <button type="button" class="dropdown-item" data-edit-target="edit-row-${u.sr_no}" onclick="closeAllDropdowns()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg> Edit
+              </button>
+              <form action="/delete_user/${u.sr_no}" method="post" style="margin:0;"
+                    onsubmit="return confirm('Delete this record?');">
+                <button type="submit" class="dropdown-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg> Delete
                 </button>
-                <div id="dropdown-${u.sr_no}" class="dropdown-menu">
-                  <a href="/qr_code/${u.sr_no}" class="dropdown-item" onclick="closeAllDropdowns()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg> Download QR
-                  </a>
-                  <a href="/user/${u.sr_no}" target="_blank" class="dropdown-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    </svg> View User
-                  </a>
-                  <button type="button" class="dropdown-item" data-edit-target="edit-row-${u.sr_no}" onclick="closeAllDropdowns()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg> Edit
-                  </button>
-                  <form action="/delete_user/${u.sr_no}" method="post" style="margin:0;"
-                    onsubmit="return confirm('Are you sure you want to delete this record?');">
-                    <button type="submit" class="dropdown-item">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                      </svg> Delete
-                    </button>
-                  </form>
-                </div>
+              </form>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr id="edit-row-${u.sr_no}" class="edit-row">
+        <td colspan="${FIELD_COUNT + 3}">
+          <div class="edit-panel">
+            <h3>Edit Record ( ${esc(u.midkatkram)} )</h3>
+            <form action="/edit_user/${u.sr_no}" method="post">
+              <div class="edit-grid">${editInputs}</div>
+              <div class="edit-actions">
+                <button type="submit" class="btn btn-edit">Save Changes</button>
+                <button type="button" class="btn btn-secondary" data-close-target="edit-row-${u.sr_no}">Cancel</button>
               </div>
-            </td>
-          </tr>
-          <tr id="edit-row-${u.sr_no}" class="edit-row">
-            <td colspan="${FIELD_COUNT + 3}">
-              <div class="edit-panel">
-                <h3>Edit Record ( ${esc(u.midkatkram)} )</h3>
-                <form action="/edit_user/${u.sr_no}" method="post">
-                  <div class="edit-grid">${editInputs}</div>
-                  <div class="edit-actions">
-                    <button type="submit" class="btn btn-edit">Save Changes</button>
-                    <button type="button" class="btn btn-secondary" data-close-target="edit-row-${u.sr_no}">Cancel</button>
-                  </div>
-                </form>
-              </div>
-            </td>
-          </tr>`;
-        }).join('');
+            </form>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
 
-        tbody.innerHTML = rows;
-        bindEditButtons();
-      }
+    bindEditButtons();
+  }
 
-      // ── Pagination + search state ─────────────────────────────
-      let currentPage = {{ initial_page }};
-      let currentQuery = '';
-      let searchDebounce = null;
-      const LIMIT = 300;
+  // ── Pagination HTML ────────────────────────────────────
+  function paginationHTML(total, page) {
+    const totalPages = Math.ceil(total / LIMIT);
+    if (totalPages <= 1) return '';
+    const info = `<span style="font-size:14px;color:var(--muted);">Page <strong>${page}</strong> of <strong>${totalPages}</strong> &nbsp;·&nbsp; ${total} records</span>`;
+    const prev = page > 1
+      ? `<button onclick="goToPage(${page-1})" style="padding:6px 14px;border:1px solid #dfe4ec;border-radius:6px;background:#fff;cursor:pointer;font-weight:700;">&#8592; Prev</button>`
+      : `<button disabled style="padding:6px 14px;border:1px solid #dfe4ec;border-radius:6px;background:#f0f0f0;color:#aaa;cursor:default;font-weight:700;">&#8592; Prev</button>`;
+    const next = page < totalPages
+      ? `<button onclick="goToPage(${page+1})" style="padding:6px 14px;border:0;border-radius:6px;background:#1f4b99;color:#fff;cursor:pointer;font-weight:700;">Next &#8594;</button>`
+      : `<button disabled style="padding:6px 14px;border:0;border-radius:6px;background:#a0b4d6;color:#fff;cursor:default;font-weight:700;">Next &#8594;</button>`;
+    return prev + info + next;
+  }
 
-      // ── Pagination bar HTML builder ───────────────────────────
-      function paginationHTML(total, page) {
-        const totalPages = Math.ceil(total / LIMIT);
-        if (totalPages <= 1) return '';
-        const qParam = currentQuery ? `&q=${encodeURIComponent(currentQuery)}` : '';
-        const info = `<span style="font-size:14px;color:var(--muted);">Page <strong>${page}</strong> of <strong>${totalPages}</strong> &nbsp;·&nbsp; ${total} records</span>`;
-        const prev = page > 1
-          ? `<button onclick="goToPage(${page-1})" style="padding:6px 14px;border:1px solid #dfe4ec;border-radius:6px;background:#fff;cursor:pointer;font-weight:700;">&#8592; Prev</button>`
-          : `<button disabled style="padding:6px 14px;border:1px solid #dfe4ec;border-radius:6px;background:#f0f0f0;color:#aaa;cursor:default;font-weight:700;">&#8592; Prev</button>`;
-        const next = page < totalPages
-          ? `<button onclick="goToPage(${page+1})" style="padding:6px 14px;border:0;border-radius:6px;background:#1f4b99;color:#fff;cursor:pointer;font-weight:700;">Next &#8594;</button>`
-          : `<button disabled style="padding:6px 14px;border:0;border-radius:6px;background:#a0b4d6;color:#fff;cursor:default;font-weight:700;">Next &#8594;</button>`;
-        return prev + info + next;
-      }
+  function renderPagination(total, page) {
+    const html = paginationHTML(total, page);
+    document.getElementById('pagination-top').innerHTML = html;
+    let bot = document.getElementById('pagination-bottom');
+    if (!bot) {
+      bot = document.createElement('div');
+      bot.id = 'pagination-bottom';
+      bot.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap;';
+      tableSection.insertAdjacentElement('afterend', bot);
+    }
+    bot.innerHTML = html;
+  }
 
-      function renderPagination(total, page) {
-        const html = paginationHTML(total, page);
-        document.getElementById('pagination-top').innerHTML = html;
-        let bot = document.getElementById('pagination-bottom');
-        if (!bot) {
-          bot = document.createElement('div');
-          bot.id = 'pagination-bottom';
-          bot.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap;';
-          tableSection.insertAdjacentElement('afterend', bot);
-        }
-        bot.innerHTML = html;
-      }
+  function goToPage(page) {
+    currentPage = page;
+    history.pushState({page, q: currentQuery, filter: currentFilter, sort: currentSort}, '', buildHistoryUrl(page));
+    loadUsers(page);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
 
-      function goToPage(page) {
-        currentPage = page;
-        const url = currentQuery
-          ? `/dashboard/${page}?q=${encodeURIComponent(currentQuery)}`
-          : `/dashboard/${page}`;
-        history.pushState({page, q: currentQuery}, '', url);
-        loadUsers(page, currentQuery);
-        window.scrollTo({top: 0, behavior: 'smooth'});
-      }
-
-      // Handle browser back/forward
-      window.addEventListener('popstate', (e) => {
-        if (e.state) {
-          currentPage = e.state.page || 1;
-          currentQuery = e.state.q || '';
-          document.getElementById('table-search').value = currentQuery;
-          loadUsers(currentPage, currentQuery);
-        }
-      });
-
-      // ── Fetch users from API ──────────────────────────────────
-      async function loadUsers(page = 1, q = '') {
-        loadingMsg.style.display = '';
-        tableSection.style.display = 'none';
-        emptyMsg.style.display = 'none';
-        try {
-          const params = new URLSearchParams({page});
-          if (q) params.set('q', q);
-          const res = await fetch(`/api/users?${params}`);
-          if (!res.ok) throw new Error('Failed to load');
-          const data = await res.json();
-          renderUsers(data.users);
-          renderPagination(data.total, data.page);
-        } catch (e) {
-          loadingMsg.textContent = 'Failed to load records.';
-        }
-      }
-
-      // Set initial URL cleanly
-      history.replaceState({page: currentPage, q: ''}, '', `/dashboard/${currentPage}`);
+  window.addEventListener('popstate', (e) => {
+    if (e.state) {
+      currentPage   = e.state.page   || 1;
+      currentQuery  = e.state.q      || '';
+      currentFilter = e.state.filter || '';
+      currentSort   = e.state.sort   || '';
+      searchInput.value      = currentQuery;
+      filterSelect.value     = currentFilter;
+      sortSelect.value       = currentSort;
       loadUsers(currentPage);
+    }
+  });
 
-      // ── Bind edit/close buttons (called after render) ─────────
-      function bindEditButtons() {
-        document.querySelectorAll('[data-edit-target]').forEach((button) => {
-          button.addEventListener('click', () => {
-            const row = document.getElementById(button.getAttribute('data-edit-target'));
-            if (row) row.classList.toggle('open');
-          });
-        });
-        document.querySelectorAll('[data-close-target]').forEach((button) => {
-          button.addEventListener('click', () => {
-            const row = document.getElementById(button.getAttribute('data-close-target'));
-            if (row) row.classList.remove('open');
-          });
-        });
-      }
+  // ── Build API URL (carries all state) ─────────────────
+  function buildUrl(page) {
+    const params = new URLSearchParams({page});
+    if (currentQuery)  params.set('q',      currentQuery);
+    if (currentFilter) params.set('filter', currentFilter);
+    if (currentSort)   params.set('sort',   currentSort);
+    return `/api/users?${params}`;
+  }
 
-      // ── Add user form ──────────────────────────────────────────
-      form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        statusBox.style.display = 'none';
-        statusBox.classList.remove('error');
-        try {
-          const response = await fetch("{{ url_for('add_user') }}", {
-            method: 'POST',
-            body: new FormData(form),
-          });
-          if (!response.ok) throw new Error('Failed to save record');
-          statusBox.textContent = 'Record saved.';
-          statusBox.style.display = 'block';
-          form.reset();
-          loadUsers();
-        } catch (error) {
-          statusBox.textContent = 'Could not save the record.';
-          statusBox.classList.add('error');
-          statusBox.style.display = 'block';
-        }
+  function buildHistoryUrl(page) {
+    const params = new URLSearchParams();
+    if (currentQuery)  params.set('q',      currentQuery);
+    if (currentFilter) params.set('filter', currentFilter);
+    if (currentSort)   params.set('sort',   currentSort);
+    const qs = params.toString();
+    return `/dashboard/${page}` + (qs ? `?${qs}` : '');
+  }
+
+  // ── Fetch + render ─────────────────────────────────────
+  async function loadUsers(page = 1) {
+    loadingMsg.style.display = '';
+    tableSection.style.display = 'none';
+    emptyMsg.style.display = 'none';
+    try {
+      const res = await fetch(buildUrl(page));
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      renderUsers(data.users);
+      renderPagination(data.total, data.page);
+    } catch {
+      loadingMsg.textContent = 'Failed to load records.';
+    }
+  }
+
+  history.replaceState({page: currentPage, q: '', filter: '', sort: ''}, '', `/dashboard/${currentPage}`);
+  loadUsers(currentPage);
+
+  // ── Edit buttons ───────────────────────────────────────
+  function bindEditButtons() {
+    document.querySelectorAll('[data-edit-target]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const row = document.getElementById(btn.getAttribute('data-edit-target'));
+        if (row) row.classList.toggle('open');
       });
-
-      // ── CSV toggle ────────────────────────────────────────────
-      csvHelpToggle.addEventListener('click', () => csvHelp.classList.toggle('open'));
-
-      // ── Dropdown helpers ──────────────────────────────────────
-      function closeAllDropdowns() {
-        document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
-        document.querySelectorAll('.btn-dots.active').forEach(b => b.classList.remove('active'));
-      }
-
-      function toggleDropdown(event, dropdownId) {
-        event.stopPropagation();
-        const menu = document.getElementById(dropdownId);
-        if (!menu) return;
-        const wasShown = menu.classList.contains('show');
-        closeAllDropdowns();
-        if (!wasShown) {
-          menu.classList.add('show');
-          event.currentTarget.classList.add('active');
-        }
-      }
-
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('.dropdown')) closeAllDropdowns();
+    });
+    document.querySelectorAll('[data-close-target]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const row = document.getElementById(btn.getAttribute('data-close-target'));
+        if (row) row.classList.remove('open');
       });
+    });
+  }
 
-      // ── Server-side search with button click ─────────────────────
-      const searchStatus = document.getElementById('search-status');
-      const searchBtn = document.getElementById('search-btn');
-      const searchInput = document.getElementById('table-search');
-      
-      const performSearch = () => {
-        const q = searchInput.value.trim();
-        if (q === currentQuery) return;
-        searchStatus.style.display = '';
-        currentQuery = q;
-        currentPage = 1;
-        const url = q ? `/dashboard/1?q=${encodeURIComponent(q)}` : '/dashboard/1';
-        history.pushState({page: 1, q}, '', url);
-        loadUsers(1, q).then(() => { searchStatus.style.display = 'none'; });
-      };
-      
-      // Search button click event
-      searchBtn.addEventListener('click', performSearch);
-      
-      // Allow Enter key in search input to trigger search
-      searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          performSearch();
-        }
-      });
-    </script>
+  // ── Add user form ──────────────────────────────────────
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    statusBox.style.display = 'none';
+    statusBox.classList.remove('error');
+    try {
+      const r = await fetch("{{ url_for('add_user') }}", {method:'POST', body: new FormData(form)});
+      if (!r.ok) throw new Error();
+      statusBox.textContent = 'Record saved.';
+      statusBox.style.display = 'block';
+      form.reset();
+      loadUsers(currentPage);
+    } catch {
+      statusBox.textContent = 'Could not save the record.';
+      statusBox.classList.add('error');
+      statusBox.style.display = 'block';
+    }
+  });
+
+  // ── CSV toggle ─────────────────────────────────────────
+  csvHelpToggle.addEventListener('click', () => csvHelp.classList.toggle('open'));
+
+  // ── Search ─────────────────────────────────────────────
+  const performSearch = () => {
+    const q = searchInput.value.trim();
+    if (q === currentQuery) return;
+    searchStatus.style.display = '';
+    currentQuery = q;
+    currentPage  = 1;
+    history.pushState({page:1, q, filter: currentFilter, sort: currentSort}, '', buildHistoryUrl(1));
+    loadUsers(1).then(() => { searchStatus.style.display = 'none'; });
+  };
+
+  searchBtn.addEventListener('click', performSearch);
+  searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+
+  // ── Filter ─────────────────────────────────────────────
+  filterSelect.addEventListener('change', () => {
+    currentFilter = filterSelect.value === 'all' ? '' : filterSelect.value;
+    currentPage   = 1;
+    history.pushState({page:1, q: currentQuery, filter: currentFilter, sort: currentSort}, '', buildHistoryUrl(1));
+    loadUsers(1);
+  });
+
+  // ── Sort ───────────────────────────────────────────────
+  sortSelect.addEventListener('change', () => {
+    currentSort = sortSelect.value;
+    currentPage = 1;
+    history.pushState({page:1, q: currentQuery, filter: currentFilter, sort: currentSort}, '', buildHistoryUrl(1));
+    loadUsers(1);
+  });
+
+  // ── Dropdowns ──────────────────────────────────────────
+  function closeAllDropdowns() {
+    document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
+    document.querySelectorAll('.btn-dots.active').forEach(b => b.classList.remove('active'));
+  }
+  function toggleDropdown(event, id) {
+    event.stopPropagation();
+    const menu = document.getElementById(id);
+    if (!menu) return;
+    const was = menu.classList.contains('show');
+    closeAllDropdowns();
+    if (!was) { menu.classList.add('show'); event.currentTarget.classList.add('active'); }
+  }
+  document.addEventListener('click', e => { if (!e.target.closest('.dropdown')) closeAllDropdowns(); });
+</script>
 {% endblock %}
