@@ -1,0 +1,525 @@
+{% extends "menubar.html" %}
+
+{% block title %}Stats{% endblock %}
+
+{% block page_title %}Stats{% endblock %}
+{% block page_description %}Filter paid records by month range, a single month, or a month span using friendly dropdowns.{% endblock %}
+
+{% block extra_styles %}
+:root {
+  --border: #d9e2ec;
+  --text: #1d2433;
+  --muted: #5f697a;
+  --surface: #ffffff;
+  --surface-alt: #f8fbff;
+  --primary: #1f4b99;
+  --primary-soft: #eef4ff;
+  --accent: #0f8b59;
+  --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  color: var(--text);
+  background: linear-gradient(180deg, #f4f8fd 0%, #ffffff 100%);
+}
+
+.page {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  background: transparent;
+}
+
+.main-content { flex: 1; min-width: 0; }
+
+.header {
+  padding: 18px 22px 10px;
+  border-bottom: 1px solid #e8edf5;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 2.8vw, 2.6rem);
+  line-height: 1.1;
+  color: #14213d;
+}
+
+.header p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  max-width: 52rem;
+}
+
+.content { padding: 18px 22px 26px; }
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+
+.summary-card .label {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.summary-card .value {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #14213d;
+}
+
+.summary-card .hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #14213d;
+}
+
+.panel-head p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 44rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.field { min-width: 0; }
+
+.field label {
+  display: block;
+  margin: 0 0 6px;
+  color: #2f3b4a;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.field select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0.72rem 1rem;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.btn-primary { background: var(--primary); }
+.btn-primary:hover { background: #153775; }
+.btn-secondary { background: #667085; }
+
+.result-box {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  border: 1px solid #dfe4ec;
+}
+
+.result-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.result-meta h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #14213d;
+}
+
+.result-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.result-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #dfe4ec;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.result-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.result-table th,
+.result-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #edf2f7;
+  text-align: left;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.result-table th {
+  background: #f8fbff;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.result-table tr:last-child td { border-bottom: none; }
+
+.empty {
+  padding: 18px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  background: #fbfdff;
+  color: var(--muted);
+  text-align: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+@media (max-width: 980px) {
+  .summary-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .content { padding: 16px; }
+  .panel { padding: 16px; }
+}
+{% endblock %}
+
+{% block content %}
+
+  <div class="panels">
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>1. Current till month range</h2>
+          <p>Pick how many months back you want to check. The page will show users with a paid status from that point up to now.</p>
+        </div>
+        {% if current_range_users %}
+        <span class="badge">{{ current_range_users|length }} results</span>
+        {% endif %}
+      </div>
+
+      <form method="get" action="{{ url_for('stats') }}" class="form-grid">
+        <div class="field">
+          <label for="month_range">Month range</label>
+          <select id="month_range" name="month_range">
+            <option value="">Select range</option>
+            {% for value in range(1, 13) %}
+            <option value="{{ value }}" {% if month_range == value %}selected{% endif %}>Last {{ value }} month{% if value != 1 %}s{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">Show stats</button>
+          {% if month_range is not none %}
+          <a class="btn btn-secondary" href="{{ url_for('stats_export', month_range=month_range) }}">Export CSV</a>
+          {% endif %}
+        </div>
+      </form>
+
+      {% if month_range is not none %}
+      <div class="result-box">
+        <div class="result-meta">
+          <h3>Results for {{ current_range_label }}</h3>
+          <span class="result-count">{{ current_range_users|length }} users</span>
+        </div>
+        {% if current_range_users %}
+        <div class="result-table-wrap">
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th>Sr. No.</th>
+                {% for dbname, marathi in fields.items() %}
+                <th>{{ marathi }}</th>
+                {% endfor %}
+                <th>Payment SS</th>
+                <th>Payment Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in current_range_users %}
+              <tr>
+                <td>{{ user.sr_no or '-' }}</td>
+                {% for dbname, marathi in fields.items() %}
+                <td>{{ user[dbname] or '-' }}</td>
+                {% endfor %}
+                <td>
+                  {% if user.payment_ss %}
+                  <a href="{{ url_for('view_photo', sr_no=user.sr_no) }}" target="_blank">View SS</a>
+                  {% else %}
+                  -
+                  {% endif %}
+                </td>
+                <td>{{ user.payment_date_display or '-' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty">No paid records matched this range.</div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>2. Particular month</h2>
+          <p>Select one month from the dropdown. The results will show every paid user whose payment month matches your selection.</p>
+        </div>
+        {% if selected_month_users %}
+        <span class="badge">{{ selected_month_users|length }} results</span>
+        {% endif %}
+      </div>
+
+      <form method="get" action="{{ url_for('stats') }}" class="form-grid">
+        <div class="field">
+          <label for="month">Month</label>
+          <select id="month" name="month">
+            <option value="">Select month</option>
+            {% for value, label in month_options %}
+            <option value="{{ value }}" {% if selected_month == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">Show stats</button>
+          {% if selected_month is not none %}
+          <a class="btn btn-secondary" href="{{ url_for('stats_export', month=selected_month) }}">Export CSV</a>
+          {% endif %}
+        </div>
+      </form>
+
+      {% if selected_month is not none %}
+      <div class="result-box">
+        <div class="result-meta">
+          <h3>Results for {{ selected_month_label }}</h3>
+          <span class="result-count">{{ selected_month_users|length }} users</span>
+        </div>
+        {% if selected_month_users %}
+        <div class="result-table-wrap">
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th>Sr. No.</th>
+                {% for dbname, marathi in fields.items() %}
+                <th>{{ marathi }}</th>
+                {% endfor %}
+                <th>Payment SS</th>
+                <th>Payment Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in selected_month_users %}
+              <tr>
+                <td>{{ user.sr_no or '-' }}</td>
+                {% for dbname, marathi in fields.items() %}
+                <td>{{ user[dbname] or '-' }}</td>
+                {% endfor %}
+                <td>
+                  {% if user.payment_ss %}
+                  <a href="{{ url_for('view_photo', sr_no=user.sr_no) }}" target="_blank">View SS</a>
+                  {% else %}
+                  -
+                  {% endif %}
+                </td>
+                <td>{{ user.payment_date_display or '-' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty">No paid records matched this month.</div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>3. From month to month</h2>
+          <p>Choose a start and end month..</p>
+        </div>
+        {% if month_span_users %}
+        <span class="badge">{{ month_span_users|length }} results</span>
+        {% endif %}
+      </div>
+
+      <form method="get" action="{{ url_for('stats') }}" class="form-grid">
+        <div class="field">
+          <label for="start_month">Start month</label>
+          <select id="start_month" name="start_month">
+            <option value="">Select start month</option>
+            {% for value, label in month_options %}
+            <option value="{{ value }}" {% if start_month == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="end_month">End month</label>
+          <select id="end_month" name="end_month">
+            <option value="">Select end month</option>
+            {% for value, label in month_options %}
+            <option value="{{ value }}" {% if end_month == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">Show stats</button>
+          {% if start_month is not none and end_month is not none %}
+          <a class="btn btn-secondary" href="{{ url_for('stats_export', start_month=start_month, end_month=end_month) }}">Export CSV</a>
+          {% endif %}
+        </div>
+      </form>
+
+      {% if start_month is not none and end_month is not none %}
+      <div class="result-box">
+        <div class="result-meta">
+          <h3>Results for {{ start_month_label }} to {{ end_month_label }}</h3>
+          <span class="result-count">{{ month_span_users|length }} users</span>
+        </div>
+        {% if month_span_users %}
+        <div class="result-table-wrap">
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th>Sr. No.</th>
+                {% for dbname, marathi in fields.items() %}
+                <th>{{ marathi }}</th>
+                {% endfor %}
+                <th>Payment SS</th>
+                <th>Payment Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in month_span_users %}
+              <tr>
+                <td>{{ user.sr_no or '-' }}</td>
+                {% for dbname, marathi in fields.items() %}
+                <td>{{ user[dbname] or '-' }}</td>
+                {% endfor %}
+                <td>
+                  {% if user.payment_ss %}
+                  <a href="{{ url_for('view_photo', sr_no=user.sr_no) }}" target="_blank">View SS</a>
+                  {% else %}
+                  -
+                  {% endif %}
+                </td>
+                <td>{{ user.payment_date_display or '-' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty">No paid records matched this month span.</div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

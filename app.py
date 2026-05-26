@@ -20,6 +20,8 @@ import threading
 import time
 import shutil
 
+from dateutil.relativedelta import relativedelta
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -78,6 +80,21 @@ fields = {
     "ekun_dene_rakkam": "एकूण येणे रक्कम",
 }
 
+MONTH_OPTIONS = [
+    (1, "January"),
+    (2, "February"),
+    (3, "March"),
+    (4, "April"),
+    (5, "May"),
+    (6, "June"),
+    (7, "July"),
+    (8, "August"),
+    (9, "September"),
+    (10, "October"),
+    (11, "November"),
+    (12, "December"),
+]
+
 @app.context_processor
 def inject_globals():
     return {
@@ -86,6 +103,7 @@ def inject_globals():
         "helpline_number": HELPLINE_NUMBER,
     }
 
+
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -93,6 +111,125 @@ def login_required(f):
             return redirect(url_for('login', next=request.path))
         return f(*args, **kwargs)
     return decorated
+
+
+def current_indian_time():
+    return datetime.now() + timedelta(hours=5, minutes=30)
+
+
+def parse_payment_datetime(payment_status):
+    if not payment_status or not payment_status.startswith("Paid "):
+        return None
+    raw_payment = payment_status.split("Paid ", 1)[1].strip()
+    for date_format in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"):
+        try:
+            return datetime.strptime(raw_payment, date_format)
+        except ValueError:
+            continue
+    return None
+
+
+def format_payment_datetime(payment_date):
+    if not payment_date:
+        return "-"
+    return payment_date.strftime("%d %B %Y, %I:%M %p")
+
+
+def month_name(month_number):
+    return dict(MONTH_OPTIONS).get(month_number, str(month_number))
+
+
+def build_payment_stats(users, predicate):
+    results = []
+    for user in users:
+        payment_date = parse_payment_datetime(user.get("payment_status"))
+        if payment_date and predicate(payment_date):
+            user_copy = dict(user)
+            user_copy["payment_date_display"] = format_payment_datetime(payment_date)
+            results.append(user_copy)
+    return results
+
+
+@app.route('/stats/export')
+@login_required
+def stats_export():
+    conn, c = get_db()
+    c.execute('SELECT * FROM users')
+    users = [dict(row) for row in c.fetchall()]
+    conn.close()
+
+    # parse query params same as /stats
+    month_range_raw = request.args.get('month_range', '').strip()
+    selected_month_raw = request.args.get('month', '').strip()
+    start_month_raw = request.args.get('start_month', '').strip()
+    end_month_raw = request.args.get('end_month', '').strip()
+
+    try:
+        month_range = int(month_range_raw) if month_range_raw else None
+    except ValueError:
+        month_range = None
+    try:
+        selected_month = int(selected_month_raw) if selected_month_raw else None
+    except ValueError:
+        selected_month = None
+    try:
+        start_month = int(start_month_raw) if start_month_raw else None
+    except ValueError:
+        start_month = None
+    try:
+        end_month = int(end_month_raw) if end_month_raw else None
+    except ValueError:
+        end_month = None
+
+    now = current_indian_time()
+
+    rows_to_export = []
+    # Priority: month_range, then selected_month, then start/end span
+    if month_range is not None:
+        cutoff = now - relativedelta(months=month_range)
+        rows_to_export = build_payment_stats(users, lambda d: d >= cutoff)
+        filename = f'stats_last_{month_range}_months.csv'
+    elif selected_month is not None:
+        rows_to_export = build_payment_stats(users, lambda d: d.month == selected_month)
+        filename = f'stats_month_{selected_month}.csv'
+    elif start_month is not None and end_month is not None:
+        rows_to_export = build_payment_stats(
+            users,
+            lambda payment_date: (
+                (start_month <= end_month and start_month <= payment_date.month <= end_month)
+                or
+                (start_month > end_month and (payment_date.month >= start_month or payment_date.month <= end_month))
+            ),
+        )
+        filename = f'stats_{start_month}_to_{end_month}.csv'
+    else:
+        # nothing selected -> export empty file header
+        rows_to_export = []
+        filename = 'stats_export.csv'
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    header = ['sr_no'] + list(fields.keys()) + ['payment_ss', 'payment_date', 'payment_status']
+    writer.writerow(header)
+
+    for user in rows_to_export:
+        row = [
+            user.get('sr_no'),
+            *[user.get(k) for k in fields.keys()],
+            user.get('payment_ss'),
+            user.get('payment_date_display'),
+            user.get('payment_status'),
+        ]
+        writer.writerow(row)
+
+    output.seek(0)
+    return send_file(
+        io.BytesIO(output.getvalue().encode('utf-8-sig')),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=filename,
+    )
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -1161,6 +1298,88 @@ def reports():
                            unpaid_users=unpaid_users,
                            paid_users=paid_users,
                            approved_users=approved_users)
+
+
+@app.route('/stats')
+@login_required
+def stats():
+    conn, c = get_db()
+    c.execute('SELECT * FROM users')
+    users = [dict(row) for row in c.fetchall()]
+    conn.close()
+
+    now = current_indian_time()
+
+    month_range_raw = request.args.get('month_range', '').strip()
+    selected_month_raw = request.args.get('month', '').strip()
+    start_month_raw = request.args.get('start_month', '').strip()
+    end_month_raw = request.args.get('end_month', '').strip()
+
+    try:
+        month_range = int(month_range_raw) if month_range_raw else None
+    except ValueError:
+        month_range = None
+
+    try:
+        selected_month = int(selected_month_raw) if selected_month_raw else None
+    except ValueError:
+        selected_month = None
+
+    try:
+        start_month = int(start_month_raw) if start_month_raw else None
+    except ValueError:
+        start_month = None
+
+    try:
+        end_month = int(end_month_raw) if end_month_raw else None
+    except ValueError:
+        end_month = None
+
+    current_range_users = []
+    if month_range is not None:
+        cutoff = now - relativedelta(months=month_range)
+        current_range_users = build_payment_stats(
+            users,
+            lambda payment_date: payment_date >= cutoff,
+        )
+
+    selected_month_users = []
+    if selected_month is not None:
+        selected_month_users = build_payment_stats(
+            users,
+            lambda payment_date: payment_date.month == selected_month,
+        )
+
+    month_span_users = []
+    if start_month is not None and end_month is not None:
+        month_span_users = build_payment_stats(
+            users,
+            lambda payment_date: (
+                (start_month <= end_month and start_month <= payment_date.month <= end_month)
+                or
+                (start_month > end_month and (payment_date.month >= start_month or payment_date.month <= end_month))
+            ),
+        )
+
+    return render_template(
+        'stats.html',
+        month_options=MONTH_OPTIONS,
+        current_range_users=current_range_users,
+        selected_month_users=selected_month_users,
+        month_span_users=month_span_users,
+        month_range=month_range,
+        selected_month=selected_month,
+        start_month=start_month,
+        end_month=end_month,
+        month_range_raw=month_range_raw,
+        selected_month_raw=selected_month_raw,
+        start_month_raw=start_month_raw,
+        end_month_raw=end_month_raw,
+        current_range_label=f'Last {month_range} month{"s" if month_range != 1 else ""}' if month_range is not None else None,
+        selected_month_label=month_name(selected_month) if selected_month is not None else None,
+        start_month_label=month_name(start_month) if start_month is not None else None,
+        end_month_label=month_name(end_month) if end_month is not None else None,
+    )
 
 
 @app.route('/dashboard')
