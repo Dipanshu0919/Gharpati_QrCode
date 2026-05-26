@@ -437,7 +437,7 @@ def build_upi_payment_uri(admin_upi_id, amount):
         "upi://pay"
         f"?pa={admin_upi_id.strip()}"
         "&pn=grampanchayat"
-        f"&tn={quote('Gharpatti', safe='')}"
+        f"&tn={quote('gharpatti', safe='')}"
         f"&am={normalized_amount}"
         "&cu=INR"
     )
