@@ -13,6 +13,7 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import wraps
 from PIL import Image, ImageDraw, ImageFont
 from flask import Flask, render_template, request, redirect, url_for, send_file, session, flash, jsonify
+from datetime import datetime, timedelta
 from urllib.parse import quote
 import uuid
 import threading
@@ -27,10 +28,12 @@ APP_PORT = int(os.environ.get("APP_PORT", 1594))
 STATIC_PATH = os.path.join(os.path.dirname(__file__), "static")
 
 app = Flask(__name__, static_url_path='/static', static_folder=STATIC_PATH)
-app.secret_key = "replace-with-a-secure-key"
+app.secret_key = "secret-key" + str(uuid.uuid4())
 app.config['SESSION_PERMANENT'] = False
 DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
 SAMPLE_CSV_PATH = os.path.join(os.path.dirname(__file__), "sample_users.csv")
+
+Indiantime = datetime.now() + timedelta(hours=5, minutes=30)
 
 GP_NAME = "ग्रामपंचायत"
 HELPLINE_NUMBER = ""
@@ -59,7 +62,7 @@ def _worker_init():
 
 fields = {
     "midkatkram": "मिळकत क्र",
-    "ghar_malkache_nav": "मालकाचे नाव",
+    "ghar_malkache_nav": "घर मालकाचे नाव",
     "gharpatti_magil": "घरपट्टी (मागील)",
     "gharpatti_chalu": "घरपट्टी (चालू)",
     "gharpatti_ekun": "घरपट्टी (एकूण)",
@@ -288,40 +291,42 @@ def has_marathi(text):
 
 
 def get_font(size=24, text=None):
-
     is_windows = platform.system() == "Windows"
 
     if is_windows:
-
-        # Windows font paths
         if text is not None and not has_marathi(text):
             font_files = [
                 "C:/Windows/Fonts/arial.ttf",
                 "C:/Windows/Fonts/calibri.ttf",
                 "C:/Windows/Fonts/segoeui.ttf",
-                "C:/Windows/Fonts/Nirmala.ttf",  # Marathi support
+                "C:/Windows/Fonts/Nirmala.ttf",
             ]
         else:
             font_files = [
-                "C:/Windows/Fonts/Nirmala.ttf",  # Best for Marathi
+                "C:/Windows/Fonts/Nirmala.ttf",
                 "C:/Windows/Fonts/mangal.ttf",
                 "C:/Windows/Fonts/arial.ttf",
                 "C:/Windows/Fonts/segoeui.ttf",
             ]
-
     else:
-
-        # Linux font paths
         if text is not None and not has_marathi(text):
             font_files = [
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
                 "/usr/share/fonts/dejavu/DejaVuSans.ttf",
                 "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf",
+                "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+                "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
                 "/usr/share/fonts/google-noto/NotoSansDevanagari-Regular.ttf",
             ]
         else:
             font_files = [
+                "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
+                "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
                 "/usr/share/fonts/google-noto/NotoSansDevanagari-Regular.ttf",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
                 "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
                 "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf",
             ]
 
@@ -428,20 +433,19 @@ def normalize_amount(value):
     return normalized
 
 
-def build_upi_payment_uri(admin_upi_id, amount):
+def build_upi_payment_uri(admin_upi_id, amount, midkatkram=None):
     normalized_amount = normalize_amount(amount)
-
     if not admin_upi_id or not normalized_amount:
         return None
-    to_return = (
+    note = f"gharpatti {midkatkram}" if midkatkram else "gharpatti"
+    return (
         "upi://pay"
         f"?pa={admin_upi_id.strip()}"
         "&pn=grampanchayat"
-        f"&tn={quote('gharpatti', safe='')}"
+        f"&tn={quote(note, safe='')}"
         f"&am={normalized_amount}"
         "&cu=INR"
     )
-    return to_return
 
 
 def qr_data_url(payload):
@@ -721,7 +725,9 @@ def login():
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    response = redirect(url_for('login'))
+    response.delete_cookie('session')
+    return response
 
 
 @app.route('/add_user', methods=['POST'])
@@ -758,6 +764,35 @@ def add_user_csv():
         rows.append(normalized_row)
     insert_users(rows)
     return redirect(url_for('dashboard'))
+
+
+@app.route('/export_csv')
+@login_required
+def export_csv():
+    conn, c = get_db()
+    c.execute('SELECT * FROM users')
+    users = c.fetchall()
+    conn.close()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(['sr_no'] + list(fields.keys()) + ['payment_status'])
+
+    for user in users:
+        writer.writerow([
+            user['sr_no'],
+            *[user[k] for k in fields.keys()],
+            user['payment_status'],
+        ])
+
+    output.seek(0)
+    return send_file(
+        io.BytesIO(output.getvalue().encode('utf-8-sig')),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='users_export.csv',
+    )
 
 
 @app.route('/download_sample_csv')
@@ -816,7 +851,9 @@ def view_user(sr_no):
     if not user:
         return "User not found", 404
     session["current_user"] = user["sr_no"]
-    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['ekun_dene_rakkam'])
+    
+    midkatkram = user["midkatkram"].replace("अ", "A").replace("ब", "B").replace("क", "K").replace("ड", "D").replace("(", "").replace(")", "") if user["midkatkram"] else None
+    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['ekun_dene_rakkam'], midkatkram)
     upi_qr_data = None
     if upi_payment_uri:
         upi_qr_data = image_buffer_to_data_url(generate_upi_qr_card_image(user, upi_payment_uri))
@@ -874,7 +911,10 @@ def download_qr(sr_no):
     conn.close()
     if not user:
         return "User not found", 404
-    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['ekun_dene_rakkam'])
+
+    midkatkram = user["midkatkram"].replace("अ", "A").replace("ब", "B").replace("क", "K").replace("ड", "D").replace("(", "").replace(")", "") if user["midkatkram"] else None
+    
+    upi_payment_uri = build_upi_payment_uri(admin['upi_id'] if admin else None, user['ekun_dene_rakkam'], midkatkram)
     if not upi_payment_uri:
         return "QR not configured", 404
     buffer = generate_upi_qr_card_image(user, upi_payment_uri)
@@ -1077,8 +1117,8 @@ def receipt(sr_no):
 @login_required
 def approve_payment(sr_no):
     conn, c = get_db()
-    date = datetime.datetime.now()
-    paymentstatus = f"Paid {date.today()}"
+    date = Indiantime
+    paymentstatus = f"Paid {date}"
     c.execute('UPDATE users SET payment_status = ? WHERE sr_no = ?', (paymentstatus, sr_no))
     conn.commit()
     conn.close()

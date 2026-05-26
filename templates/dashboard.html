@@ -306,6 +306,8 @@ td { background: #fff; text-align: center; }
 
   <button type="button" class="csv-toggle" id="csv-help-toggle">CSV Upload</button>
 
+  <a href="{{ url_for('export_csv') }}" class="csv-toggle" style="background:#0f8b59;text-decoration:none;">Export CSV</a>
+
   <form action="{{ url_for('delete_all_records') }}" method="post" class="danger-form"
         onsubmit="return confirm('This will permanently delete all records and payment screenshots. Continue?');">
     <button type="submit" class="danger-button">Delete All Records</button>
