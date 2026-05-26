@@ -585,31 +585,8 @@ def build_upi_payment_uri(admin_upi_id, amount, midkatkram=None):
     )
 
 
-def qr_data_url(payload):
-    if not payload:
-        return None
-    buffer = qr_png_buffer(payload)
-    return image_buffer_to_data_url(buffer)
-
-
 def image_buffer_to_data_url(buffer):
     return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
-
-
-def qr_png_buffer(payload):
-    qr = qrcode.QRCode(
-        version=None,
-        error_correction=qrcode.constants.ERROR_CORRECT_M,
-        box_size=8,
-        border=2,
-    )
-    qr.add_data(payload)
-    qr.make(fit=True)
-    qr_img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
-    buffer = io.BytesIO()
-    qr_img.save(buffer, format='PNG')
-    buffer.seek(0)
-    return buffer
 
 
 def draw_app_badges(draw, x, y, badges):
