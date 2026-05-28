@@ -3,3 +3,4 @@ qrcode[pil]
 Pillow
 python-dotenv
 python-dateutil
+requests
