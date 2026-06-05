@@ -719,5 +719,11 @@ td { background: #fff; text-align: center; }
     if (!was) { menu.classList.add('show'); event.currentTarget.classList.add('active'); }
   }
   document.addEventListener('click', e => { if (!e.target.closest('.dropdown')) closeAllDropdowns(); });
+
+  function dev_by() {
+      const encoded =
+        "LSBEZXZlbG9wZWQgYnk6IERpcGFuc2h1IEFzaG9rIEFnYXJ3YWwKLSBNb2JpbGU6ICs5MTg1NTQwNDg4MzYKLSBHaXRodWI6IGh0dHBzOi8vZ2l0aHViLmNvbS9kaXBhbnNodTA5MTk=";
+      console.log(atob(encoded));
+    }
 </script>
 {% endblock %}
