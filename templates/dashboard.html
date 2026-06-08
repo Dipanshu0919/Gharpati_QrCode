@@ -138,10 +138,12 @@ th, td {
   border: 1px solid #d6dbe3; padding: 10px 12px;
   font-size: 15px; vertical-align: middle;
 }
-th {
-  position: sticky; top: 0;
+table.users-table th {
+  position: sticky;
+  top: 48px;
+  z-index: 20;
   background: #2f5f9a; color: #fff;
-  text-align: center; font-weight: 700; z-index: 10;
+  text-align: center; font-weight: 700;
 }
 td { background: #fff; text-align: center; }
 
@@ -219,7 +221,11 @@ td { background: #fff; text-align: center; }
   padding: 8px 10px; border: 1px solid #d6dbe3;
   font-size: 13px; text-align: center; vertical-align: middle; white-space: nowrap;
 }
-.csv-sample th { position: sticky; top: 0; background: #2f5f9a; color: #fff; font-weight: 700; }
+.csv-sample th {
+  background: #2f5f9a;
+  color: #fff;
+  font-weight: 700;
+}
 .csv-sample tbody tr:nth-child(even) td { background: #f8fbff; }
 .csv-sample .name-cell { text-align: left; white-space: normal; }
 
@@ -407,7 +413,7 @@ td { background: #fff; text-align: center; }
   <div id="pagination-top" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;"></div>
 
   <div class="table-wrap">
-    <table>
+    <table class="users-table">
       <thead>
         <tr>
           <th style="width:40px;padding-left:4px;padding-right:4px;">Sr.</th>

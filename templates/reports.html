@@ -201,14 +201,14 @@
       vertical-align: middle;
     }
 
-    th {
+    table.report-table th {
       position: sticky;
-      top: 0;
+      top: 48px;
+      z-index: 10;
       background: #2f5f9a;
       color: #fff;
       text-align: center;
       font-weight: 700;
-      z-index: 10;
     }
 
     td { background: #fff; text-align: center; }
@@ -293,7 +293,7 @@
           <div class="empty">No unpaid bills — all users have submitted payment!</div>
           {% else %}
           <div class="table-wrap">
-            <table>
+            <table class="report-table">
               <thead>
                 <tr>
                   <th style="width: 40px; padding-left: 4px; padding-right: 4px;">Sr.</th>
@@ -329,7 +329,7 @@
           <div class="empty">No payments awaiting approval.</div>
           {% else %}
           <div class="table-wrap">
-            <table>
+            <table class="report-table">
               <thead>
                 <tr>
                   <th style="width: 40px; padding-left: 4px; padding-right: 4px;">Sr.</th>
@@ -368,7 +368,7 @@
           <div class="empty">No approved payments yet.</div>
           {% else %}
           <div class="table-wrap">
-            <table>
+            <table class="report-table">
               <thead>
                 <tr>
                   <th style="width: 40px; padding-left: 4px; padding-right: 4px;">Sr.</th>

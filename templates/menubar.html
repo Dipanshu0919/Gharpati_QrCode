@@ -26,44 +26,45 @@
     }
     .page {
       display: flex;
+      flex-direction: column;
       min-height: 100vh;
       width: 100%;
       background: #eef4fb;
     }
     .sidebar {
-      position: sticky;
+      position: fixed;
       top: 0;
-      height: 100vh;
-      width: 52px;
-      min-width: 52px;
-      padding: 16px 6px;
-      border-right: 1px solid #dfe4ec;
+      left: 0;
+      right: 0;
+      height: 64px;
+      width: 100%;
+      padding: 10px 16px;
+      border-bottom: 1px solid #dfe4ec;
       background: #f7f9fc;
-      transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease;
-      overflow: hidden;
+      transition: padding 0.2s ease, background 0.2s ease;
+      overflow: visible;
       flex-shrink: 0;
       z-index: 110;
+      display: flex;
+      align-items: center;
     }
     .sidebar:hover {
-      width: 156px;
-      min-width: 156px;
-      padding: 16px 12px;
+      /* no expansion on hover for top bar */
     }
-    .sidebar .nav-text { display: none; text-align: left; flex: 1; line-height: 20px; white-space: nowrap; }
-    .sidebar:hover .nav-text { display: inline-block; }
-    .sidebar .nav-item { justify-content: center; padding: 10px 0; }
-    .sidebar:hover .nav-item { justify-content: flex-start; padding: 10px 6px; gap: 6px; }
+    .sidebar .nav-text { display: inline-block; text-align: left; margin-left: 8px; line-height: 20px; white-space: nowrap; }
+    .sidebar .nav-item { justify-content: center; padding: 8px 12px; }
+    .sidebar .nav-item { margin-right: 8px; }
     .icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: 0 0 20px; }
     .icon svg { width: 18px; height: 18px; display: block; stroke: currentColor; }
-    .sidebar nav { display: flex; flex-direction: column; gap: 8px; }
+    .sidebar nav { display: flex; flex-direction: row; gap: 8px; align-items: center; }
     .nav-item {
       display: inline-flex;
       align-items: center;
-      justify-content: flex-start;
-      width: 100%;
-      min-height: 40px;
-      padding: 10px 6px;
-      border-radius: 10px;
+      justify-content: center;
+      width: auto;
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 8px;
       background: transparent;
       color: var(--text);
       text-decoration: none;
@@ -78,7 +79,7 @@
       color: #fff;
       border-color: var(--primary);
     }
-    .main-content { flex: 1; padding: 0; min-width: 0; }
+    .main-content { flex: 1; padding: 0; min-width: 0; padding-top: 74px; }
     .header {
       padding: 18px 22px 10px;
       border-bottom: 1px solid #eceff4;
@@ -179,45 +180,37 @@
     }
     {% block extra_styles %}{% endblock %}
 
-    .page {
-      display: flex;
-      min-height: 100vh;
-      width: 100%;
-      background: #eef4fb;
-    }
     .page > .sidebar {
       position: sticky;
       top: 0;
-      height: 100vh;
-      width: 52px;
-      min-width: 52px;
-      padding: 16px 6px;
-      border-right: 1px solid #dfe4ec;
+      left: 0;
+      right: 0;
+      height: 50px;
+      width: 100%;
+      padding: 8px 12px;
+      border-bottom: 1px solid #dfe4ec;
       background: #f7f9fc;
-      transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease;
-      overflow: hidden;
-      flex-shrink: 0;
+      overflow: visible;
       z-index: 110;
+      display: flex;
+      align-items: center;
     }
-    .page > .sidebar:hover {
-      width: 156px;
-      min-width: 156px;
-      padding: 16px 10px;
-    }
+    .page > .sidebar:hover { }
     .page > .sidebar nav {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      flex-direction: row;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+      justify-content: center;
     }
     .page > .sidebar .nav-item {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0;
-      width: 100%;
-      min-height: 40px;
-      padding: 10px 0;
-      border-radius: 10px;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
       background: transparent;
       color: var(--text);
       text-decoration: none;
@@ -225,12 +218,7 @@
       font-size: 14px;
       line-height: 20px;
       border: 1px solid transparent;
-      transition: background 0.2s ease, border-color 0.2s ease;
-    }
-    .page > .sidebar:hover .nav-item {
-      justify-content: flex-start;
-      gap: 6px;
-      padding: 10px 6px;
+      transition: background 0.15s ease, border-color 0.15s ease;
     }
     .page > .sidebar .nav-item:hover,
     .page > .sidebar .nav-item.active {
@@ -253,14 +241,9 @@
       stroke: currentColor;
     }
     .page > .sidebar .nav-text {
-      display: none;
-      flex: 1;
-      text-align: left;
+      display: inline-block;
       line-height: 20px;
       white-space: nowrap;
-    }
-    .page > .sidebar:hover .nav-text {
-      display: inline-block;
     }
     .main-content {
       flex: 1;
@@ -343,7 +326,7 @@
           </span>
           <span class="nav-text">Admin</span>
         </a>
-        <a href="{{ url_for('logout') }}" class="nav-item" style="margin-top: auto; color: #ef4444;" onclick="return confirm('प्रशासक पॅनेलमधून बाहेर पडायचे आहे का?');">
+        <a href="{{ url_for('logout') }}" class="nav-item" style="color: #ef4444;" onclick="return confirm('प्रशासक पॅनेलमधून बाहेर पडायचे आहे का?');">
           <span class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="5" y="11" width="14" height="10" rx="2"></rect>
