@@ -552,12 +552,33 @@
             <p style="text-align: center; margin-bottom: 18px;">
               कृपया आपल्या मोबाईलमध्ये असलेला UPI ॲप वापरून वरील QR कार्ड स्कॅन करून घरपट्टी भरा.
             </p>
-            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin: 0 auto; max-width: 480px;">
-              <span style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#5f259f; color:#fff; font-size:13px; font-weight:700;">PhonePe</span>
-              <span style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#1a73e8; color:#fff; font-size:13px; font-weight:700;">Google Pay</span>
-              <span style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#00baf2; color:#fff; font-size:13px; font-weight:700;">Paytm</span>
-              <span style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#0f6bff; color:#fff; font-size:13px; font-weight:700;">BHIM</span>
-            </div>
+            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:0 auto; max-width:480px;">
+
+  <button
+    onclick="window.location.href='intent://#Intent;package=com.phonepe.app;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end'"
+    style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border:none; border-radius:999px; background:#5f259f; color:#fff; font-size:13px; font-weight:700; cursor:pointer;">
+    PhonePe
+  </button>
+
+  <button
+    onclick="window.location.href='intent://#Intent;package=com.google.android.apps.nbu.paisa.user;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end'"
+    style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border:none; border-radius:999px; background:#1a73e8; color:#fff; font-size:13px; font-weight:700; cursor:pointer;">
+    Google Pay
+  </button>
+
+  <button
+    onclick="window.location.href='intent://#Intent;package=net.one97.paytm;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end'"
+    style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border:none; border-radius:999px; background:#00baf2; color:#fff; font-size:13px; font-weight:700; cursor:pointer;">
+    Paytm
+  </button>
+
+  <button
+    onclick="window.location.href='intent://#Intent;package=in.org.npci.upiapp;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end'"
+    style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border:none; border-radius:999px; background:#0f6bff; color:#fff; font-size:13px; font-weight:700; cursor:pointer;">
+    BHIM
+  </button>
+
+</div>
             {% endif %}
 
             {% if user['payment_ss'] %}
