@@ -1472,6 +1472,21 @@ def clear_all_records():
     conn.close()
     return redirect(url_for('dashboard'))
 
+@app.route('/clear_user_records/<int:sr_no>', methods=['POST'])
+@login_required
+def clear_user_records(sr_no):
+    conn, c = get_db()
+    c.execute('SELECT payment_ss FROM users WHERE sr_no = ?', (sr_no,))
+    payment_file = c.fetchone()
+    if payment_file and payment_file['payment_ss'] and os.path.exists(payment_file['payment_ss']):
+        try:
+            os.remove(payment_file['payment_ss'])
+        except OSError:
+            pass
+    c.execute('UPDATE users SET payment_ss = NULL, payment_status = "Pending", gharpatti_magil = "", gharpatti_chalu = "", gharpatti_ekun = "", divabatti_magil = "", divabatti_chalu = "", divabatti_ekun = "", arogya_magil = "", arogya_chalu = "", arogya_ekun = "", itar = "", sut = "", dand = "", ekun_dene_rakkam = "" WHERE sr_no = ?', (sr_no,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('dashboard'))
 
 @app.route('/')
 def home():
