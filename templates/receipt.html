@@ -528,12 +528,26 @@
                 <td class="num">₹ {{ user['arogya_chalu'] or '0' }}</td>
                 <td class="num"><strong>₹ {{ user['arogya_ekun'] or '0' }}</strong></td>
               </tr>
-              <!-- Water Tax -->
+              <!-- Other Tax -->
               <tr>
-                <td><strong>पाणीपट्टी</strong> (Water Tax)</td>
-                <td class="num">₹ {{ user['panipatti_magil'] or '0' }}</td>
-                <td class="num">₹ {{ user['panipatti_chalu'] or '0' }}</td>
-                <td class="num"><strong>₹ {{ user['panipatti_ekun'] or '0' }}</strong></td>
+                <td><strong>इतर</strong> (Other)</td>
+                <td class="num">₹ 0</td>
+                <td class="num" >₹ {{ user['itar'] or '0' }}</td>
+                <td class="num" ><strong>₹ {{ user['itar'] or '0' }}</strong></td>
+              </tr>
+              <!-- Discount -->
+              <tr>
+                <td style="color: #059669;"><strong>सूट</strong> (Discount)</td>
+                <td class="num">₹ 0</td>
+                <td class="num" style="color:#059669">₹ {{ user['sut'] or '0' }}</td>
+                <td class="num" style="color:#059669"><strong>₹ {{ user['sut'] or '0' }}</strong></td>
+              </tr>
+              <!-- Fine -->
+              <tr>
+                <td style="color: #dc2626;"><strong>दंड</strong> (Fine)</td>
+                <td class="num">₹ 0</td>
+                <td class="num" style="color:#dc2626">₹ {{ user['dand'] or '0' }}</td>
+                <td class="num" style="color:#dc2626"><strong>₹ {{ user['dand'] or '0' }}</strong></td>
               </tr>
               <!-- Grand Total -->
               <tr class="grand-total-row">

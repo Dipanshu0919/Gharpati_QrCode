@@ -314,8 +314,13 @@ td { background: #fff; text-align: center; }
 
   <a href="{{ url_for('export_csv') }}" class="csv-toggle" style="background:#0f8b59;text-decoration:none;">Export CSV</a>
 
+  <a href="{{ url_for('clear_all_records')}}" class="csv-toggle" style="background:yellowgreen;text-decoration:none;"
+     onclick="return confirm('This will clear all records but keep the sr_no, midkatkram and ghar_malkache_nav. Continue?\n\nयामुळे सर्व नोंदी पुसल्या जातील पण sr_no, midkatkram आणि ghar_malkache_nav कायम राहतील.');">
+    Clear All Records
+    </a>
+
   <form action="{{ url_for('delete_all_records') }}" method="post" class="danger-form"
-        onsubmit="return confirm('This will permanently delete all records and payment screenshots. Continue?');">
+        onsubmit="return confirm('This will permanently delete all records and payment screenshots. Continue?\n\nयामुळे वापरकर्त्याचा सर्व डेटा, नोंदी आणि पेमेंटचे स्क्रीनशॉट कायमचे हटवले जातील.');">
     <button type="submit" class="danger-button">Delete All Records</button>
   </form>
 </div>
@@ -334,7 +339,7 @@ td { background: #fff; text-align: center; }
           <th>gharpatti_magil</th><th>gharpatti_chalu</th><th>gharpatti_ekun</th>
           <th>divabatti_magil</th><th>divabatti_chalu</th><th>divabatti_ekun</th>
           <th>arogya_magil</th><th>arogya_chalu</th><th>arogya_ekun</th>
-          <th>panipatti_magil</th><th>panipatti_chalu</th><th>panipatti_ekun</th>
+          <th>itar</th><th>sut</th><th>dand</th>
           <th>ekun_dene_rakkam</th>
         </tr>
       </thead>
@@ -361,7 +366,7 @@ td { background: #fff; text-align: center; }
         <code>gharpatti_magil</code>, <code>gharpatti_chalu</code>, <code>gharpatti_ekun</code>,
         <code>divabatti_magil</code>, <code>divabatti_chalu</code>, <code>divabatti_ekun</code>,
         <code>arogya_magil</code>, <code>arogya_chalu</code>, <code>arogya_ekun</code>,
-        <code>panipatti_magil</code>, <code>panipatti_chalu</code>, <code>panipatti_ekun</code>,
+        <code>itar</code>, <code>sut</code>, <code>dand</code>,
         <code>ekun_dene_rakkam</code>.
       </p>
       <a href="{{ url_for('download_sample_csv') }}" class="csv-toggle"

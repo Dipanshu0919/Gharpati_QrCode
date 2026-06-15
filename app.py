@@ -74,9 +74,9 @@ fields = {
     "arogya_magil": "आरोग्य (मागील)",
     "arogya_chalu": "आरोग्य (चालू)",
     "arogya_ekun": "आरोग्य (एकूण)",
-    "panipatti_magil": "पाणीपट्टी (मागील)",
-    "panipatti_chalu": "पाणीपट्टी (चालू)",
-    "panipatti_ekun": "पाणीपट्टी (एकूण)",
+    "itar": "इतर",
+    "sut": "सूट",
+    "dand": "दंड",
     "ekun_dene_rakkam": "एकूण येणे रक्कम",
 }
 
@@ -253,9 +253,9 @@ def init_db():
             arogya_magil TEXT,
             arogya_chalu TEXT,
             arogya_ekun TEXT,
-            panipatti_magil TEXT,
-            panipatti_chalu TEXT,
-            panipatti_ekun TEXT,
+            itar TEXT,
+            sut TEXT,
+            dand TEXT,
             ekun_dene_rakkam TEXT,
             payment_ss TEXT DEFAULT NULL,
             payment_status TEXT DEFAULT "Pending"
@@ -869,9 +869,11 @@ def add_user_csv():
         if not str(total_value).strip():
             total = (
                 to_amount(row.get('arogya_ekun')) +
-                to_amount(row.get('panipatti_ekun')) +
+                to_amount(row.get('dand')) +
+                to_amount(row.get('itar')) +
                 to_amount(row.get('gharpatti_ekun')) +
-                to_amount(row.get('divabatti_ekun'))
+                to_amount(row.get('divabatti_ekun')) -
+                to_amount(row.get('sut'))
             )
             total_value = str(total)
         normalized_row['ekun_dene_rakkam'] = total_value
@@ -1385,7 +1387,7 @@ def api_users():
             'gharpatti_magil','gharpatti_chalu','gharpatti_ekun',
             'divabatti_magil','divabatti_chalu','divabatti_ekun',
             'arogya_magil','arogya_chalu','arogya_ekun',
-            'panipatti_magil','panipatti_chalu','panipatti_ekun','ekun_dene_rakkam'
+            'itar','sut','dand','ekun_dene_rakkam'
         ]
         conditions.append('(' + ' OR '.join(f'{f} LIKE ?' for f in search_fields) + ')')
         params.extend([f'%{q}%'] * len(search_fields))
@@ -1428,6 +1430,25 @@ def delete_all_records():
         c.execute("DELETE FROM sqlite_sequence WHERE name = 'users'")
     except Exception:
         pass
+    conn.commit()
+    conn.close()
+    return redirect(url_for('dashboard'))
+
+
+# clear all records just leave sr_no, midkatkram and ghar_malkache_nav, and set payment_ss to NULL, payment_status to "Pending", and all other fields to empty strings
+@app.route('/clear_all_records')
+@login_required
+def clear_all_records():
+    conn, c = get_db()
+    c.execute('SELECT payment_ss FROM users WHERE payment_ss IS NOT NULL AND payment_ss != ""')
+    payment_files = [row['payment_ss'] for row in c.fetchall()]
+    for payment_path in payment_files:
+        if payment_path and os.path.exists(payment_path):
+            try:
+                os.remove(payment_path)
+            except OSError:
+                pass
+    c.execute('UPDATE users SET payment_ss = NULL, payment_status = "Pending", gharpatti_magil = "", gharpatti_chalu = "", gharpatti_ekun = "", divabatti_magil = "", divabatti_chalu = "", divabatti_ekun = "", arogya_magil = "", arogya_chalu = "", arogya_ekun = "", itar = "", sut = "", dand = "", ekun_dene_rakkam = ""')
     conn.commit()
     conn.close()
     return redirect(url_for('dashboard'))
