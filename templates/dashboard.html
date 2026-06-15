@@ -484,9 +484,12 @@ td { background: #fff; text-align: center; }
           style="background:#0f172a;white-space:nowrap;padding:4px 10px;font-size:13px;">View SS</a>`;
         let approveBtn;
         if (u.payment_status === 'Pending') {
-          approveBtn = `<a href="/approve/payment/${u.sr_no}"
-            style="display:inline-block;padding:4px 10px;background:#059669;color:#fff;border-radius:6px;font-weight:700;font-size:13px;text-decoration:none;white-space:nowrap;"
-            onclick="return confirm('Approve payment for this user?');">Approve</a>`;
+          approveBtn = `<button style="display:inline-block;padding:4px 10px;background:#059669;color:#fff;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;" 
+          onclick="if(confirm('Approve payment for this user?\\n\\n> या वापरकर्त्याच्या पेमेंटला मंजुरी द्यायची का?')) window.location='/approve/payment/${u.sr_no}';"> Approve </button>
+
+          <button style="display:inline-block;padding:4px 10px;background:#dc2626;color:#fff;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;"
+          onclick="if(confirm('Decline payment for this user?\\n\\n> या वापरकर्त्याच्या पेमेंटला मंजुरी नाकारणे का?')) window.location='/clear_or_delete_payment/${u.sr_no}';"> Decline </button>
+            `;
         } else {
           approveBtn = `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;border-radius:6px;font-weight:700;font-size:12px;white-space:nowrap;">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>

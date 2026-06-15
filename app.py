@@ -956,6 +956,24 @@ def delete_user(sr_no):
     return redirect(url_for('dashboard'))
 
 
+# this works to clear the payment screenshot and reset the payment status to "Pending" and can also work for decline of payment works if is admin 
+@app.route('/clear_or_delete_payment/<int:sr_no>')
+@login_required
+def clear_or_delete_payment(sr_no):
+    conn, c = get_db()
+    c.execute('SELECT payment_ss FROM users WHERE sr_no = ?', (sr_no,))
+    user = c.fetchone()
+    if user and user['payment_ss'] and os.path.exists(user['payment_ss']):
+        try:
+            os.remove(user['payment_ss'])
+        except OSError:
+            pass
+    c.execute('UPDATE users SET payment_ss = NULL, payment_status = "Pending" WHERE sr_no = ?', (sr_no,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('dashboard'))
+
+
 @app.route('/user/<int:sr_no>')
 def view_user(sr_no):
     conn, c = get_db()
@@ -978,6 +996,7 @@ def view_user(sr_no):
     return render_template(
         'view_user.html',
         user=user,
+        helpline_number=HELPLINE_NUMBER,
         upi_payment_uri=upi_payment_uri,
         upi_qr_data=upi_qr_data,
         service_requests=service_requests,

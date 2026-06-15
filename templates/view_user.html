@@ -489,7 +489,11 @@
   <main class="page">
     <section class="hero">
       <h1>तुमची माहिती</h1>
-      <p>आपल्या घरपट्टी माहिती आणि सेवा विनंत्या येथे तपासा.</p>
+      <p>आपल्या घरपट्टी माहिती आणि सेवा विनंत्या येथे तपासा.
+        {% if helpline_number %}
+        <br><strong>कोणत्याही प्रश्नांसाठी किंवा शंकांसाठी या क्रमांकावर संपर्क साधा: <a href="tel:{{ helpline_number }}" style="color: black">{{ helpline_number }}</a></strong>
+        {% endif %}
+      </p>
     </section>
 
     <article class="card">
@@ -533,6 +537,13 @@
           <button type="button" class="btn-secondary details-toggle" id="toggleDetails">सर्व तपशील पहा</button>
 
           <div class="payment-section">
+            {% if helpline_number %}
+            <p style="text-align: center; margin-bottom: 18px;">
+              कृपया आपल्या मोबाईलमध्ये असलेला UPI ॲप वापरून खालील QR कार्ड स्कॅन करून घरपट्टी भरा. <br>पेमेंटसाठी कोणत्याही अडचणी असल्यास, कृपया या क्रमांकावर संपर्क साधा: <a href="tel:{{ helpline_number }}" style="color: black">{{ helpline_number }}</a><br></p>
+            {% else %}
+            <p style="text-align: center; margin-bottom: 18px;">
+              कृपया आपल्या मोबाईलमध्ये असलेला UPI ॲप वापरून खालील QR कार्ड स्कॅन करून घरपट्टी भरा.<br></p>
+            {% endif %}
             <div style="text-align: center; margin-bottom: 24px;">
               {% if upi_qr_data %}
               <a href="{{ url_for('download_qr', sr_no=user['sr_no']) }}" class="btn" style="display:inline-flex; max-width:fit-content;">

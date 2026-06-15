@@ -350,8 +350,10 @@
                     <div class="actions-cell">
                       <a href="{{ url_for('view_user', sr_no=user.sr_no) }}" target="_blank" class="btn btn-blue">View User</a>
                       <a href="{{ url_for('view_photo', sr_no=user.sr_no) }}" target="_blank" class="btn btn-dark">View SS</a>
-                      <a href="{{ url_for('approve_payment', sr_no=user.sr_no) }}" class="btn btn-green"
-                        onclick="return confirm('Approve this payment? The user will move to the Approved table.');">Approve</a>
+                      <button style="display:inline-block;padding:4px 10px;background:#059669;color:#fff;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;"
+                      onclick="if(confirm('Approve payment for this user?\n\n> या वापरकर्त्याच्या पेमेंटला मंजुरी द्यायची का?')) window.location='{{ url_for('approve_payment', sr_no=user.sr_no) }}';"> Approve </button>
+                      <button style="display:inline-block;padding:4px 10px;background:#dc2626;color:#fff;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;"
+                      onclick="if(confirm('Decline payment for this user?\n\n> या वापरकर्त्याच्या पेमेंटला मंजुरी नाकारणे का?')) window.location='{{ url_for('clear_or_delete_payment', sr_no=user.sr_no) }}';"> Decline </button>
                     </div>
                   </td>
                 </tr>
