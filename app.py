@@ -1526,7 +1526,7 @@ def save_admin():
         else:
             c.execute(
                 'INSERT INTO admins (gp_name, admin_name, admin_contact, admin_email, admin_password, upi_id, helpline_number) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                (gp_name, admin_name, admin_contact, admin_email, 'changeme', upi_id, helpline_number)
+                (gp_name, admin_name, admin_contact, admin_email, 'admin123', upi_id, helpline_number)
             )
         conn.commit()
         load_gp_name()
