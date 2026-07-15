@@ -1,10 +1,6 @@
-I understand - you want a README that documents the project itself without any installation or deployment steps since this is for internal use only. [1](#1-0) 
-
----
-
 # Gharpati QR Code System
 
-A specialized management platform designed for local village administrations (Gram Panchayats) to digitize property tax collection and civil service requests using QR-based automation. [1](#1-0) 
+A specialized management platform designed for local village administrations (Gram Panchayats) to digitize property tax collection and civil service requests using QR-based automation.
 
 ## 🎯 Purpose
 
@@ -20,9 +16,9 @@ The system serves two primary functions:
 
 ## 🛠️ Technology Stack
 
-- **Backend**: Flask (Python) [2](#1-1) 
-- **Database**: SQLite for persistent storage of users, admins, and service requests [3](#1-2) 
-- **Image Processing**: Pillow (PIL) and `qrcode` for generating multilingual tax cards and payment URIs [4](#1-3) 
+- **Backend**: Flask (Python)
+- **Database**: SQLite for persistent storage of users, admins, and service requests 
+- **Image Processing**: Pillow (PIL) and `qrcode` for generating multilingual tax cards and payment URIs 
 - **Frontend**: Jinja2 templates with responsive CSS and `html2pdf.js` for receipt generation
 
 ## 📋 Features
@@ -55,19 +51,19 @@ Stores property tax records with fields for:
 - Property identification (`midkatkram`, `ghar_malkache_nav`)
 - Tax breakdowns (`gharpatti_*`, `divabatti_*`, `arogya_*`)
 - Financial calculations (`ekun_dene_rakkam`)
-- Payment tracking (`payment_ss`, `payment_status`) [5](#1-4) 
+- Payment tracking (`payment_ss`, `payment_status`)
 
 ### Admins Table
 Stores administrator credentials and configuration:
 - Gram Panchayat name and contact details
 - Admin authentication (email, password)
-- UPI ID for payments and helpline number [6](#1-5) 
+- UPI ID for payments and helpline number
 
 ### Janam Dakhla Table
 Stores civil service requests for:
 - Birth certificates
 - Death certificates  
-- Marriage certificates [7](#1-6) 
+- Marriage certificates
 
 ## 🔄 Core Workflows
 
@@ -76,18 +72,18 @@ Stores civil service requests for:
 2. Citizen makes UPI payment and uploads screenshot
 3. Admin reviews screenshot in dashboard
 4. Admin approves payment → status changes to "Approved"
-5. System generates digital receipt [8](#1-7) 
+5. System generates digital receipt 
 
 ### CSV Ingestion Process
 1. Admin uploads CSV with tax records
 2. System validates and normalizes financial data
 3. Auto-calculates totals if not provided
-4. Bulk inserts into database [9](#1-8) 
+4. Bulk inserts into database
 
 ### QR Code Generation
 - Uses `ProcessPoolExecutor` for bulk generation
 - Creates multilingual tax cards with Marathi/English text
-- Generates both URL QR codes and UPI payment QR codes [10](#1-9) 
+- Generates both URL QR codes and UPI payment QR codes
 
 ## 📁 Project Structure
 
@@ -105,19 +101,6 @@ Gharpati_QrCode/
 └── sample_users.csv     # Sample CSV format for reference
 ```
 
-## 🔧 Configuration
-
-### Environment Variables
-- `APP_PORT`: Port for Flask application (default: 1594) [11](#1-10) 
-
-### Database Fields
-The system uses a field dictionary for Marathi tax headers: [12](#1-11) 
-- `midkatkram`: मिळकत क्र (Property Number)
-- `gharpatti_*`: घरपट्टी (Property Tax)
-- `divabatti_*`: दिवाबत्ती (Light Tax)
-- `arogya_*`: आरोग्य (Health Tax)
-- `ekun_dene_rakkam`: एकूण येणे रक्कम (Total Amount)
-
 ## 📊 Key Routes
 
 - `/login` - Admin authentication and initial setup
@@ -129,17 +112,3 @@ The system uses a field dictionary for Marathi tax headers: [12](#1-11)
 - `/approve/payment/<sr_no>` - Payment approval
 - `/services` - Civil services management
 - `/stats` - Payment statistics and reporting
-
-## 🛡️ Security Notes
-
-- Session-based authentication for admin access
-- File upload validation for payment screenshots
-- SQL injection prevention through parameterized queries
-- Input sanitization for financial calculations using Decimal type
-
-## 📝 Development Notes
-
-- The application uses SQLite for simplicity and portability
-- Multi-language text rendering uses regex splitting for Devanagari script [13](#1-12) 
-- Financial calculations use `Decimal` type for precision [14](#1-13) 
-- Static file cleanup thread manages temporary uploads
